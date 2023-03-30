@@ -10,7 +10,7 @@ class Game:
     def __init__(self):
         # game attributes
         self.level = None
-        self.max_level = 0
+        self.max_level = 5
         self.max_health = 100
         self.cur_health = 100
         self.coins = 0
@@ -52,7 +52,7 @@ class Game:
 
 # Pygame setup
 pygame.init()
-screen = pygame.display.set_mode((screen_width, screen_height), flags=pygame.FULLSCREEN | pygame.SCALED)
+screen = pygame.display.set_mode((screen_width, screen_height), flags=pygame.FULLSCREEN | pygame.SCALED, vsync=1)
 screen_surface = pygame.Surface((screen_width, screen_height))
 clock = pygame.time.Clock()
 game = Game()

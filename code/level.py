@@ -141,7 +141,7 @@ class Level:
                     self.player.add(sprite)
                 elif val == '1':
                     hat_surface = pygame.image.load('../graphics/character/hat.png').convert_alpha()
-                    sprite = StaticTile(tile_size, x, y, hat_surface)
+                    sprite = StaticTile(tile_size, x, y + 38, hat_surface)
                     self.goal.add(sprite)
 
     def create_jump_particles(self, pos):
