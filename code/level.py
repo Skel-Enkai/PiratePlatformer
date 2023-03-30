@@ -62,7 +62,7 @@ class Level:
         enemy_layout = import_csv_layout(level_data['enemies'])
         self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
 
-        # contraint
+        # constraint
         constraint_layout = import_csv_layout(level_data['constraints'])
         self.constraint_sprites = self.create_tile_group(constraint_layout, 'constraint')
 
@@ -256,7 +256,7 @@ class Level:
         if pygame.sprite.spritecollide(self.player.sprite, self.goal, False, pygame.sprite.collide_rect_ratio(0.6)):
             self.create_overworld(self.level_number, self.new_max_level)
 
-    def check_coin_collions(self):
+    def check_coin_collisions(self):
         collided_coins = pygame.sprite.spritecollide(self.player.sprite, self.coin_sprites, True,
                                                      pygame.sprite.collide_rect_ratio(0.6))
         if collided_coins:
@@ -321,4 +321,4 @@ class Level:
         # checks
         self.check_death()
         self.check_win()
-        self.check_coin_collions()
+        self.check_coin_collisions()
