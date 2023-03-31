@@ -33,6 +33,7 @@ class Player(pygame.sprite.Sprite):
         self.on_ceiling = False
         self.on_left = False
         self.on_right = False
+        self.rebound = False
 
     def import_character_assets(self):
         character_path = '../graphics/character/'
@@ -90,14 +91,17 @@ class Player(pygame.sprite.Sprite):
         if (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y == 0:
             self.jump()
             self.create_jump_particles(self.rect.midbottom)
-        elif not (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y < -4:
+        elif not (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y < -4 and not self.rebound:
             self.direction.y = -4
+        elif not (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y < -8 and self.rebound:
+            self.direction.y = -8
 
     def get_status(self):
         if self.direction.y < 0:
             self.status = 'jump'
         elif self.direction.y > 1:
             self.status = 'fall'
+            self.rebound = False
         else:
             if self.direction.x == 0:
                 self.status = 'idle'

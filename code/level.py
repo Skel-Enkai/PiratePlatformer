@@ -3,7 +3,7 @@ import pygame.sprite
 from decoration import *
 from enemy import Enemy
 from game_data import *
-from particles import ParticleEffect
+from particles import Effect
 from player import Player
 from settings import screen_height, screen_width
 from support import import_csv_layout, import_cut_graphic
@@ -61,6 +61,7 @@ class Level:
         # enemy
         enemy_layout = import_csv_layout(level_data['enemies'])
         self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
+        self.enemy_effects = pygame.sprite.GroupSingle()
 
         # constraint
         constraint_layout = import_csv_layout(level_data['constraints'])
@@ -145,8 +146,7 @@ class Level:
                     self.goal.add(sprite)
 
     def create_jump_particles(self, pos):
-        pos += pygame.math.Vector2(0, -16)
-        jump_particle_sprite = ParticleEffect(pos, 'jump')
+        jump_particle_sprite = Effect(pos, 'jump')
         self.dust_sprite.add(jump_particle_sprite)
 
     def get_player_on_ground(self):
@@ -157,8 +157,8 @@ class Level:
 
     def create_landing_dust(self):
         if not self.player_on_ground and self.player.sprite.on_ground and not self.dust_sprite.sprites():
-            pos = self.player.sprite.rect.midbottom + pygame.math.Vector2(0, -21)
-            fall_dust_particle = ParticleEffect(pos, 'land')
+            pos = self.player.sprite.rect.midbottom
+            fall_dust_particle = Effect(pos, 'land')
             self.dust_sprite.add(fall_dust_particle)
 
     def scroll_x(self):
@@ -248,9 +248,6 @@ class Level:
     def check_death(self):
         if self.player.sprite.rect.top > screen_height + 400:
             self.create_overworld(self.level_number, 0)
-        for enemy in self.enemy_sprites:
-            if pygame.sprite.spritecollide(enemy, self.player, False, collided=pygame.sprite.collide_rect_ratio(0.6)):
-                self.create_overworld(self.level_number, 0)
 
     def check_win(self):
         if pygame.sprite.spritecollide(self.player.sprite, self.goal, False, pygame.sprite.collide_rect_ratio(0.6)):
@@ -262,6 +259,19 @@ class Level:
         if collided_coins:
             for coin in collided_coins:
                 self.change_coins(coin.value)
+
+    def check_enemy_collisions(self):
+        player = self.player.sprite
+        for enemy in self.enemy_sprites:
+            if pygame.sprite.spritecollide(enemy, self.player, False, collided=pygame.sprite.collide_rect_ratio(0.6)):
+                if (player.rect.bottom <= enemy.rect.top + 28 and player.direction.y > 6) or player.direction.y > 8:
+                    death_effect = Effect(enemy.rect.midbottom, 'enemy_die', 0.1)
+                    self.enemy_effects.add(death_effect)
+                    player.rebound = True
+                    player.direction.y = -player.direction.y
+                    enemy.kill()
+                else:
+                    self.create_overworld(self.level_number, 0)
 
     def run(self):
         self.scroll_x()
@@ -296,6 +306,8 @@ class Level:
         self.constraint_sprites.update(self.world_shift)
         self.enemy_collision_reverse()
         self.enemy_sprites.draw(self.display_surface)
+        self.enemy_effects.update(self.world_shift)
+        self.enemy_effects.draw(self.display_surface)
 
         # dust particles
         self.dust_sprite.update(self.world_shift)
@@ -321,4 +333,5 @@ class Level:
         # checks
         self.check_death()
         self.check_win()
+        self.check_enemy_collisions()
         self.check_coin_collisions()
