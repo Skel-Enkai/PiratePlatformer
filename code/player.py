@@ -22,7 +22,7 @@ class Player(pygame.sprite.Sprite):
 
         # player movement
         self.direction = pygame.math.Vector2(0, 0)
-        self.speed = 0.2
+        self.speed = 2
         self.gravity = 0.4
         self.jump_speed = -14
 
@@ -80,11 +80,11 @@ class Player(pygame.sprite.Sprite):
     def get_input(self):
         keys = pygame.key.get_pressed()
 
-        if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and not self.knockback:
-            self.direction.x = 1.5
+        if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and not self.knockback and self.direction.x <= 2:
+            self.direction.x += 0.4
             self.facing_right = True
-        elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and not self.knockback:
-            self.direction.x = -1.5
+        elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and not self.knockback and self.direction.x >= -2:
+            self.direction.x -= 0.4
             self.facing_right = False
 
         if (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y == 0:

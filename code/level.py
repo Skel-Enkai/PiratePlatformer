@@ -1,5 +1,5 @@
 import pygame.sprite
-
+import math
 from decoration import *
 from enemy import Enemy
 from game_data import *
@@ -166,27 +166,30 @@ class Level:
         player = self.player.sprite
         player_x = player.rect.centerx
         direction_x = player.direction.x
+        speed = 2
 
         if player_x < (screen_width // 3) and direction_x < 0 and self.world_offset < 0:
             player.speed = 0
-            self.world_shift = 4
-            self.world_offset += 4
+            self.world_shift = -round(player.direction.x * speed)
+            self.world_offset -= round(player.direction.x * speed)
 
         elif player_x > (screen_width - screen_width // 3) and direction_x > 0 and \
                 self.world_length >= -self.world_offset + screen_width + 10:
-            self.world_shift = -4
-            self.world_offset -= 4
+            self.world_shift = -round(player.direction.x * speed)
+            self.world_offset -= round(player.direction.x * speed)
             player.speed = 0
 
         else:
             self.world_shift = 0
-            player.speed = 4
+            player.speed = 2
 
     def horizontal_movement_collision(self):
         player = self.player.sprite
         if (player.rect.left > 0 and not player.direction.x > 0) or \
                 (player.rect.right < screen_width and not player.direction.x < 0):
-            player.rect.x += int(player.direction.x * player.speed)
+            # print('player speed=' + str(player.speed))
+            # print('player.direction.x =' + str(player.direction.x))
+            player.rect.x += round(player.direction.x * player.speed)
 
         for sprite in self.crate_sprites.sprites():
             if sprite.hitbox_rect.colliderect(player.rect):
@@ -248,7 +251,7 @@ class Level:
 
     def check_death(self):
         if self.player.sprite.rect.top > screen_height + 400:
-            self.create_overworld(self.level_number, 0)
+            self.change_cur_health(-100)
 
     def check_win(self):
         if pygame.sprite.spritecollide(self.player.sprite, self.goal, False, pygame.sprite.collide_rect_ratio(0.6)):
@@ -274,18 +277,18 @@ class Level:
                     enemy.kill()
                 elif not player.knockback:
                     self.change_cur_health(-25)
-                    if player.direction.x < -1:
-                        player.direction.x = 4
-                        player.direction.y = -5
-                        player.knockback = True
-                    elif player.direction.y < -2:
+                    if player.direction.y < -2:
                         player.rect.y += -player.direction.y
                         player.direction.y = -(player.direction.y//4)
+                        player.direction.x = -player.direction.x
                         player.knockback = True
                     else:
-                        player.direction.x = -4
-                        player.direction.y = -5
+                        force = (-player.direction.x + enemy.speed) + math.copysign(1, enemy.speed)
+                        player.rect.x += force
+                        player.direction.x = force
+                        player.direction.y = -6
                         player.knockback = True
+                        enemy.speed *= -1
 
     def run(self):
         self.scroll_x()
