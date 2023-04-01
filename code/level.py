@@ -264,13 +264,13 @@ class Level:
             for coin in collided_coins:
                 self.change_coins(coin.value)
 
-# fix collisions, so you get knocked back the direction the goomba is walking at you when still
     def check_enemy_collisions(self):
         player = self.player.sprite
         for enemy in self.enemy_sprites:
             if pygame.sprite.spritecollide(enemy, self.player, False, collided=pygame.sprite.collide_rect_ratio(0.6)):
                 if (player.rect.bottom <= enemy.rect.top + 28 and player.direction.y > 6) or player.direction.y > 8:
-                    death_effect = Effect(enemy.rect.midbottom, 'enemy_die', 0.1)
+                    death_effect = Effect((enemy.rect.midbottom[0], enemy.rect.midbottom[1] - 12),
+                                          'enemy_die', 0.1, enemy.speed)
                     self.enemy_effects.add(death_effect)
                     player.rebound = True
                     player.direction.y = -player.direction.y
@@ -283,6 +283,7 @@ class Level:
                         player.direction.x = -player.direction.x
                         player.knockback = True
                     else:
+                        # if you collide with enemy while it's walking away it will deal double damage, needs fix
                         force = (-player.direction.x + enemy.speed) + math.copysign(1, enemy.speed)
                         player.rect.x += force
                         player.direction.x = force
