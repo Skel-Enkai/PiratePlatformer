@@ -22,7 +22,7 @@ class Player(pygame.sprite.Sprite):
 
         # player movement
         self.direction = pygame.math.Vector2(0, 0)
-        self.speed = 4
+        self.speed = 0.2
         self.gravity = 0.4
         self.jump_speed = -14
 
@@ -34,6 +34,7 @@ class Player(pygame.sprite.Sprite):
         self.on_left = False
         self.on_right = False
         self.rebound = False
+        self.knockback = False
 
     def import_character_assets(self):
         character_path = '../graphics/character/'
@@ -79,14 +80,12 @@ class Player(pygame.sprite.Sprite):
     def get_input(self):
         keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.direction.x = 1
+        if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and not self.knockback:
+            self.direction.x = 1.5
             self.facing_right = True
-        elif keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.direction.x = -1
+        elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and not self.knockback:
+            self.direction.x = -1.5
             self.facing_right = False
-        else:
-            self.direction.x = 0
 
         if (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y == 0:
             self.jump()
@@ -112,6 +111,15 @@ class Player(pygame.sprite.Sprite):
         self.direction.y += self.gravity
         self.rect.y += self.direction.y
 
+    def reset_x(self):
+        if self.direction.x >= 0.4:
+            self.direction.x -= 0.3
+        elif self.direction.x <= -0.4:
+            self.direction.x += 0.3
+        else:
+            self.direction.x = 0
+            self.knockback = False
+
     def jump(self):
         self.direction.y = self.jump_speed
 
@@ -123,4 +131,5 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         self.get_input()
         self.get_status()
+        self.reset_x()
         self.animate()

@@ -12,7 +12,7 @@ from tiles import *
 
 # noinspection PyAttributeOutsideInit,PyTypeChecker,PyUnboundLocalVariable
 class Level:
-    def __init__(self, level_number, surface, create_overworld, change_coins):
+    def __init__(self, level_number, surface, create_overworld, change_coins, change_cur_health):
         self.create_overworld = create_overworld
         self.display_surface = surface
         self.level_number = level_number
@@ -31,6 +31,7 @@ class Level:
 
         # user interface
         self.change_coins = change_coins
+        self.change_cur_health = change_cur_health
 
         # terrain setup
         terrain_layout = import_csv_layout(level_data['terrain'])
@@ -185,7 +186,7 @@ class Level:
         player = self.player.sprite
         if (player.rect.left > 0 and not player.direction.x > 0) or \
                 (player.rect.right < screen_width and not player.direction.x < 0):
-            player.rect.x += player.direction.x * player.speed
+            player.rect.x += int(player.direction.x * player.speed)
 
         for sprite in self.crate_sprites.sprites():
             if sprite.hitbox_rect.colliderect(player.rect):
@@ -260,6 +261,7 @@ class Level:
             for coin in collided_coins:
                 self.change_coins(coin.value)
 
+# fix collisions, so you get knocked back the direction the goomba is walking at you when still
     def check_enemy_collisions(self):
         player = self.player.sprite
         for enemy in self.enemy_sprites:
@@ -270,8 +272,20 @@ class Level:
                     player.rebound = True
                     player.direction.y = -player.direction.y
                     enemy.kill()
-                else:
-                    self.create_overworld(self.level_number, 0)
+                elif not player.knockback:
+                    self.change_cur_health(-25)
+                    if player.direction.x < -1:
+                        player.direction.x = 4
+                        player.direction.y = -5
+                        player.knockback = True
+                    elif player.direction.y < -2:
+                        player.rect.y += -player.direction.y
+                        player.direction.y = -(player.direction.y//4)
+                        player.knockback = True
+                    else:
+                        player.direction.x = -4
+                        player.direction.y = -5
+                        player.knockback = True
 
     def run(self):
         self.scroll_x()
