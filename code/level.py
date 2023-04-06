@@ -264,32 +264,57 @@ class Level:
             for coin in collided_coins:
                 self.change_coins(coin.value)
 
+    # make jumping on head deal damage but not kill?
+
     def check_enemy_collisions(self):
         player = self.player.sprite
         for enemy in self.enemy_sprites:
-            if pygame.sprite.spritecollide(enemy, self.player, False, collided=pygame.sprite.collide_rect_ratio(0.6)):
-                if (player.rect.bottom <= enemy.rect.top + 28 and player.direction.y > 6) or player.direction.y > 8:
+            if pygame.sprite.spritecollide(enemy, self.player, False, collided=pygame.sprite.collide_rect_ratio(0.8)):
+                # if player should bounce of enemy
+                if (player.rect.bottom <= enemy.rect.top + 28 and player.direction.y > 5) or player.direction.y > 8:
+                    # to remove enemy death, remove here:
                     death_effect = Effect((enemy.rect.midbottom[0], enemy.rect.midbottom[1] - 12),
                                           'enemy_die', 0.1, enemy.speed)
                     self.enemy_effects.add(death_effect)
-                    player.rebound = True
-                    player.direction.y = -player.direction.y
                     enemy.kill()
-                elif not player.knockback:
-                    self.change_cur_health(-25)
-                    if player.direction.y < -2:
-                        player.rect.y += -player.direction.y
-                        player.direction.y = -(player.direction.y//4)
-                        player.direction.x = -player.direction.x
-                        player.knockback = True
+                    # :to here
+                    player.rebound = True
+                    if player.direction.y <= -12:
+                        player.direction.y = -player.direction.y
                     else:
-                        # if you collide with enemy while it's walking away it will deal double damage, needs fix
-                        force = (-player.direction.x + enemy.speed) + math.copysign(1, enemy.speed)
-                        player.rect.x += force
-                        player.direction.x = force
-                        player.direction.y = -6
+                        player.direction.y = -12
+                    player.rect.y -= 12
+                # if player should be damaged
+                elif player.can_move and not player.knockback:
+                    self.change_cur_health(-10)
+                    # if player is hitting enemy from the bottom
+                    if player.direction.y < -2:
                         player.knockback = True
-                        enemy.speed *= -1
+                        player.can_move = False
+                        player.rect.y += -player.direction.y
+                        player.direction.y = -(player.direction.y // 4)
+                        player.direction.x = -player.direction.x
+                    # if player is hitting enemy from top but moving too slowly to avoid damage
+                    elif player.direction.y > 1:
+                        player.rebound = True
+                        player.knockback = True
+                        player.can_move = False
+                        player.rect.y += -6
+                        player.direction.y = -8
+                        player.direction.x = enemy.speed
+                    # standard side way collisions and whether enemy should be reversed
+                    else:
+                        player.knockback = True
+                        player.can_move = False
+                        if math.copysign(1, enemy.speed) != math.copysign(1, player.direction.x) \
+                                or player.direction.x == 0:
+                            force = (-player.direction.x + enemy.speed) / 2 + math.copysign(2, enemy.speed)
+                            enemy.speed *= -1
+                        else:
+                            force = (-player.direction.x) - math.copysign(2, enemy.speed)
+                        player.direction.x = force
+                        player.rect.x += force
+                        player.direction.y = -1 * abs(force)
 
     def run(self):
         self.scroll_x()

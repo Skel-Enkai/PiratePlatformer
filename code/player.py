@@ -9,6 +9,7 @@ class Player(pygame.sprite.Sprite):
         self.import_character_assets()
         self.frame_index = 0
         self.animations_speed = 0.15
+        self.frame_knockback = 0
         self.image = self.animations['idle'][0]
         self.rect = self.image.get_rect(topleft=pos)
         self.rect = self.rect.inflate(-55, 0)
@@ -35,10 +36,11 @@ class Player(pygame.sprite.Sprite):
         self.on_right = False
         self.rebound = False
         self.knockback = False
+        self.can_move = True
 
     def import_character_assets(self):
         character_path = '../graphics/character/'
-        self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': []}
+        self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'hit': []}
 
         for animation in self.animations.keys():
             full_path = character_path + animation
@@ -62,6 +64,21 @@ class Player(pygame.sprite.Sprite):
             flipped_image = pygame.transform.flip(image, True, False)
             self.image = flipped_image
 
+    def knockback_anim(self):
+        animation = self.animations['hit']
+        image = animation[int(self.frame_knockback)]
+        if self.facing_right:
+            self.image = image
+        else:
+            flipped_image = pygame.transform.flip(image, True, False)
+            self.image = flipped_image
+
+        # check for end of animation
+        self.frame_knockback += 0.1
+        if self.frame_knockback >= len(animation):
+            self.knockback = False
+            self.frame_knockback = 0
+
     def dust_animate(self):
         if self.status == 'run' and self.on_ground:
             self.dust_frame_index += self.dust_animations_speed
@@ -80,10 +97,10 @@ class Player(pygame.sprite.Sprite):
     def get_input(self):
         keys = pygame.key.get_pressed()
 
-        if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and not self.knockback and self.direction.x <= 2:
+        if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and self.can_move and self.direction.x <= 2:
             self.direction.x += 0.4
             self.facing_right = True
-        elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and not self.knockback and self.direction.x >= -2:
+        elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and self.can_move and self.direction.x >= -2:
             self.direction.x -= 0.4
             self.facing_right = False
 
@@ -118,7 +135,7 @@ class Player(pygame.sprite.Sprite):
             self.direction.x += 0.3
         else:
             self.direction.x = 0
-            self.knockback = False
+            self.can_move = True
 
     def jump(self):
         self.direction.y = self.jump_speed
@@ -132,4 +149,7 @@ class Player(pygame.sprite.Sprite):
         self.get_input()
         self.get_status()
         self.reset_x()
-        self.animate()
+        if not self.knockback:
+            self.animate()
+        else:
+            self.knockback_anim()

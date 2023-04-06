@@ -63,6 +63,7 @@ class Game:
             self.overworld.draw()
 
 
+# pygame.FULLSCREEN | pygame.SCALED (flags for fullscreen)
 # Pygame setup
 pygame.init()
 screen = pygame.display.set_mode((screen_width, screen_height), flags=pygame.FULLSCREEN | pygame.SCALED, vsync=1)
@@ -88,4 +89,4 @@ while True:
     pygame.display.update()
     clock.tick(60)
 
-# Setup Scalable Resolutions, for now I have made quick fix
+# Setup Scalable Resolutions
