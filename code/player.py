@@ -1,4 +1,5 @@
 import pygame
+import math
 from support import import_folder
 
 
@@ -74,10 +75,14 @@ class Player(pygame.sprite.Sprite):
             self.image = flipped_image
 
         # check for end of animation
+        if self.frame_knockback == 0:
+            self.can_move = False
         self.frame_knockback += 0.1
         if self.frame_knockback >= len(animation):
             self.knockback = False
             self.frame_knockback = 0
+        elif self.frame_knockback >= 2:
+            self.can_move = True
 
     def dust_animate(self):
         if self.status == 'run' and self.on_ground:
@@ -135,10 +140,38 @@ class Player(pygame.sprite.Sprite):
             self.direction.x += 0.3
         else:
             self.direction.x = 0
-            self.can_move = True
 
     def jump(self):
         self.direction.y = self.jump_speed
+
+    def bounce(self):
+        if self.direction.y <= -12:
+            self.direction.y = -self.direction.y
+        else:
+            self.direction.y = -12
+        self.rect.y -= 12
+
+    def head_collision(self):
+        self.rect.y += -self.direction.y
+        self.direction.y = -(self.direction.y // 4)
+        self.direction.x = -self.direction.x
+
+    def slow_fall_collision(self, enemy_speed):
+        self.rebound = True
+        self.rect.y += -10
+        self.direction.y = -7
+        self.direction.x = enemy_speed
+
+    def standard_collision(self, enemy):
+        if math.copysign(1, enemy.speed) != math.copysign(1, self.direction.x) \
+                or self.direction.x == 0:
+            force = (-self.direction.x + enemy.speed) / 2 + math.copysign(2, enemy.speed)
+            enemy.speed *= -1
+        else:
+            force = (-self.direction.x) - math.copysign(2, enemy.speed)
+        self.direction.x = force
+        self.rect.x += force
+        self.direction.y = -1 * abs(force)
 
     def draw(self):
         pygame.Surface.blit(self.display_surface, self.image, self.rect.move(-28, 0))

@@ -8,6 +8,7 @@
  <tileset firstgid="19" source="tilesets/palms.tsx"/>
  <tileset firstgid="22" source="tilesets/grass_tiles.tsx"/>
  <tileset firstgid="27" source="tilesets/coin_tiles.tsx"/>
+ <tileset firstgid="29" source="tilesets/enemy_tiles.tsx"/>
  <layer id="4" name="bg_palms" width="60" height="11">
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
