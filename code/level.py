@@ -246,6 +246,7 @@ class Level:
     def enemy_collision_reverse(self):
         for enemy in self.enemy_sprites.sprites():
             if pygame.sprite.spritecollide(enemy, self.constraint_sprites, False):
+                enemy.rect.x -= enemy.speed
                 enemy.reverse()
 
     def check_death(self):
@@ -263,14 +264,12 @@ class Level:
             for coin in collided_coins:
                 self.change_coins(coin.value)
 
-    # make jumping on head deal damage but not kill?
-
     def check_enemy_collisions(self):
         player = self.player.sprite
         for enemy in self.enemy_sprites:
             if pygame.sprite.spritecollide(enemy, self.player, False, collided=pygame.sprite.collide_rect_ratio(0.8)):
                 if (player.rect.bottom <= enemy.rect.top + 28 and player.direction.y > 5) or player.direction.y > 8:
-                    self.enemy_kill(enemy)
+                    enemy.damage(-50)
                     player.rebound = True
                     player.bounce()
                 elif not player.knockback:
