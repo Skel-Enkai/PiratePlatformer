@@ -61,7 +61,6 @@ class Level:
         # enemy
         enemy_layout = import_csv_layout(level_data['enemies'])
         self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
-        self.enemy_effects = pygame.sprite.GroupSingle()
 
         # constraint
         constraint_layout = import_csv_layout(level_data['constraints'])
@@ -269,7 +268,7 @@ class Level:
         for enemy in self.enemy_sprites:
             if pygame.sprite.spritecollide(enemy, self.player, False, collided=pygame.sprite.collide_rect_ratio(0.8)):
                 if (player.rect.bottom <= enemy.rect.top + 28 and player.direction.y > 5) or player.direction.y > 8:
-                    enemy.damage(-50)
+                    enemy.damage(-35)
                     player.rebound = True
                     player.bounce()
                 elif not player.knockback:
@@ -281,12 +280,6 @@ class Level:
                         player.slow_fall_collision(enemy.speed)
                     else:
                         player.standard_collision(enemy)
-
-    def enemy_kill(self, enemy):
-        death_effect = Effect((enemy.rect.midbottom[0], enemy.rect.midbottom[1] - 12),
-                              'enemy_die', 0.1, enemy.speed)
-        self.enemy_effects.add(death_effect)
-        enemy.kill()
 
     def run(self):
         self.scroll_x()
@@ -321,8 +314,6 @@ class Level:
         self.constraint_sprites.update(self.world_shift)
         self.enemy_collision_reverse()
         self.enemy_sprites.draw(self.display_surface)
-        self.enemy_effects.update(self.world_shift)
-        self.enemy_effects.draw(self.display_surface)
 
         # dust particles
         self.dust_sprite.update(self.world_shift)
