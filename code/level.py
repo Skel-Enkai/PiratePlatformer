@@ -266,20 +266,23 @@ class Level:
     def check_enemy_collisions(self):
         player = self.player.sprite
         for enemy in self.enemy_sprites:
-            if pygame.sprite.spritecollide(enemy, self.player, False, collided=pygame.sprite.collide_rect_ratio(0.8)):
-                if (player.rect.bottom <= enemy.rect.top + 28 and player.direction.y > 5) or player.direction.y > 8:
-                    enemy.damage(-35)
-                    player.rebound = True
-                    player.bounce()
-                elif not player.knockback:
-                    self.change_cur_health(-10)
-                    player.knockback = True
-                    if player.direction.y < -2:
-                        player.head_collision()
-                    elif player.direction.y > 1:
-                        player.slow_fall_collision(enemy.speed)
-                    else:
-                        player.standard_collision(enemy)
+            if not enemy.dying:
+                if pygame.sprite.spritecollide(enemy, self.player, False,
+                                               collided=pygame.sprite.collide_rect_ratio(0.8)):
+                    if (player.rect.bottom <= enemy.rect.top + 28 and player.direction.y > 5) or player.direction.y > 8:
+                        if player.direction.y > 9:
+                            enemy.damage(-35)
+                        player.rebound = True
+                        player.bounce(enemy)
+                    elif not player.knockback:
+                        self.change_cur_health(-10)
+                        player.knockback = True
+                        if player.direction.y < -2:
+                            player.head_collision()
+                        elif player.direction.y > 1:
+                            player.slow_fall_collision(enemy.speed)
+                        else:
+                            player.standard_collision(enemy)
 
     def run(self):
         self.scroll_x()

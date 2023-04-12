@@ -26,7 +26,8 @@ class Player(pygame.sprite.Sprite):
         self.direction = pygame.math.Vector2(0, 0)
         self.speed = 2
         self.gravity = 0.4
-        self.jump_speed = -14
+        self.jump_speed = -2
+        self.jump = False
 
         # player status
         self.status = 'idle'
@@ -110,13 +111,15 @@ class Player(pygame.sprite.Sprite):
                 self.facing_right = False
 
         if (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y == 0:
-            self.jump()
+            self.jump = True
             self.create_jump_particles(self.rect.midbottom)
         elif not (keys[pygame.K_SPACE] or keys[pygame.K_w]):
             if self.direction.y < -4 and not self.rebound:
                 self.direction.y = -4
-            elif self.direction.y < -8 and self.rebound:
-                self.direction.y = -8
+                self.jump = False
+            elif self.direction.y < -6 and self.rebound:
+                self.direction.y = -6
+                self.jump = False
 
     def get_status(self):
         if self.direction.y < 0:
@@ -131,7 +134,12 @@ class Player(pygame.sprite.Sprite):
                 self.status = 'run'
 
     def apply_gravity(self):
-        self.direction.y += self.gravity
+        if self.jump:
+            self.direction.y += self.jump_speed
+            if self.direction.y <= -12:
+                self.jump = False
+        else:
+            self.direction.y += self.gravity
         self.rect.y += self.direction.y
 
     def reset_x(self):
@@ -142,15 +150,10 @@ class Player(pygame.sprite.Sprite):
         else:
             self.direction.x = 0
 
-    def jump(self):
-        self.direction.y = self.jump_speed
-
-    def bounce(self):
-        if self.direction.y <= -12:
-            self.direction.y = -self.direction.y
-        else:
-            self.direction.y = -12
-        self.rect.y -= 12
+    def bounce(self, enemy):
+        self.jump = True
+        self.direction.y = 0
+        self.rect.bottom = enemy.rect.top
 
     def head_collision(self):
         self.rect.y += -self.direction.y
