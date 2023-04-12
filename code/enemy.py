@@ -14,8 +14,10 @@ class Enemy(AnimatedTile):
         self.previous_speed = 0
         self.health = 100
         self.knockback = False
+        self.dying = False
         self.run_frames = self.frames
         self.knockback_frames = import_folder('../graphics/enemy/Hit')
+        self.death_frames = import_folder('../graphics/enemy/DeadHit')
 
     def move(self):
         self.rect.x += self.speed
@@ -24,24 +26,30 @@ class Enemy(AnimatedTile):
         self.speed *= -1
 
     def damage(self, amount):
-        if not self.knockback:
+        if not self.knockback and not self.dying:
             self.health += amount
-            self.frames = self.knockback_frames
             self.frame_index = 0
-            self.knockback = True
             self.previous_speed = self.speed
             self.speed = 0
+            if self.health <= 0:
+                self.frames = self.death_frames
+                self.rect.y -= 8
+                self.dying = True
+            else:
+                self.frames = self.knockback_frames
+                self.knockback = True
 
     def animate(self):
         self.frame_index += self.anim_speed
-        if self.frame_index > len(self.frames) and self.knockback:
+        if self.frame_index > len(self.frames):
             self.frame_index = 0
-            self.frames = self.run_frames
-            self.speed = self.previous_speed
-            self.previous_speed = 0
-            self.knockback = False
-        elif self.frame_index > len(self.frames):
-            self.frame_index = 0
+            if self.knockback:
+                self.frames = self.run_frames
+                self.speed = self.previous_speed
+                self.previous_speed = 0
+                self.knockback = False
+            elif self.dying:
+                self.kill()
         self.image = self.frames[int(self.frame_index)]
         if self.speed > 0 or self.previous_speed > 0:
             self.image = pygame.transform.flip(self.image, True, False)
