@@ -10,6 +10,7 @@ class Game:
     def __init__(self):
         # game attributes
         self.level = None
+        self.current_level = None
         self.max_level = 5
         self.max_health = 100
         self.cur_health = 100
@@ -28,6 +29,7 @@ class Game:
         self.level = Level(current_level, screen_surface, self.create_overworld,
                            self.change_coins, self.change_cur_health)
         self.status = 'level'
+        self.current_level = current_level
 
     def create_overworld(self, current_level, new_max_level):
         if new_max_level > self.max_level:
@@ -47,8 +49,9 @@ class Game:
         if self.cur_health <= 0:
             self.cur_health = 100
             self.coins = 0
-            self.max_level = 0
-            self.overworld = Overworld(screen_surface, self.create_level, 0, self.max_level)
+            # self.max_level = 0 // uncomment for perma death
+            # self.current_level 0 // uncomment for perma death
+            self.overworld = Overworld(screen_surface, self.create_level, self.current_level, self.max_level)
             self.status = 'overworld'
 
     def run(self):

@@ -101,21 +101,22 @@ class Player(pygame.sprite.Sprite):
 
     def get_input(self):
         keys = pygame.key.get_pressed()
-
-        if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and self.can_move and self.direction.x <= 2:
-            self.direction.x += 0.4
-            self.facing_right = True
-        elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and self.can_move and self.direction.x >= -2:
-            self.direction.x -= 0.4
-            self.facing_right = False
+        if self.can_move:
+            if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and self.direction.x <= 2:
+                self.direction.x += 0.4
+                self.facing_right = True
+            elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and self.direction.x >= -2:
+                self.direction.x -= 0.4
+                self.facing_right = False
 
         if (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y == 0:
             self.jump()
             self.create_jump_particles(self.rect.midbottom)
-        elif not (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y < -4 and not self.rebound:
-            self.direction.y = -4
-        elif not (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y < -8 and self.rebound:
-            self.direction.y = -8
+        elif not (keys[pygame.K_SPACE] or keys[pygame.K_w]):
+            if self.direction.y < -4 and not self.rebound:
+                self.direction.y = -4
+            elif self.direction.y < -8 and self.rebound:
+                self.direction.y = -8
 
     def get_status(self):
         if self.direction.y < 0:
@@ -176,7 +177,7 @@ class Player(pygame.sprite.Sprite):
     def draw(self):
         pygame.Surface.blit(self.display_surface, self.image, self.rect.move(-28, 0))
         self.dust_animate()
-        #  pygame.draw.rect(self.display_surface, 'Red', self.rect)
+        # pygame.draw.rect(self.display_surface, 'Red', self.rect)
 
     def update(self):
         self.get_input()
