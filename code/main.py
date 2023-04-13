@@ -10,7 +10,7 @@ class Game:
     def __init__(self):
         # game attributes
         self.level = None
-        self.current_level = None
+        self.current_level = 0
         self.max_level = 5
         self.max_health = 100
         self.cur_health = 100
@@ -20,24 +20,23 @@ class Game:
         self.overworld = Overworld(screen_surface, self.create_level, 0, self.max_level)
         self.status = 'overworld'
         self.switch_overworld = pygame.event.custom_type()
-        self.wait = False
+        pygame.time.set_timer(self.switch_overworld, 500)
 
         # ui
         self.ui = UI(screen_surface)
 
     def create_level(self, current_level):
+        self.current_level = current_level
         self.level = Level(current_level, screen_surface, self.create_overworld,
                            self.change_coins, self.change_cur_health)
         self.status = 'level'
-        self.current_level = current_level
 
-    def create_overworld(self, current_level, new_max_level):
+    def create_overworld(self, new_max_level):
         if new_max_level > self.max_level:
             self.max_level = new_max_level
-        self.overworld = Overworld(screen_surface, self.create_level, current_level, self.max_level)
+        self.overworld = Overworld(screen_surface, self.create_level, self.current_level, self.max_level)
         self.status = 'overworld'
-        self.wait = True
-        pygame.time.set_timer(self.switch_overworld, 600)
+        pygame.time.set_timer(self.switch_overworld, 1000)
 
     def change_coins(self, amount):
         self.coins += amount
@@ -55,21 +54,19 @@ class Game:
             self.status = 'overworld'
 
     def run(self):
-        if self.status == 'overworld' and not self.wait:
+        if self.status == 'overworld':
             self.overworld.run()
         elif self.status == 'level':
             self.level.run()
             self.ui.show_health(self.cur_health, self.max_health)
             self.ui.show_coins(self.coins)
             self.check_game_over()
-        else:
-            self.overworld.draw()
 
 
-# pygame.FULLSCREEN | pygame.SCALED (flags for fullscreen)
+# pygame.FULLSCREEN | pygame.SCALED (flags for fullscreen) # (vsync sets fps max to 60)
 # Pygame setup
 pygame.init()
-screen = pygame.display.set_mode((screen_width, screen_height), flags=pygame.FULLSCREEN | pygame.SCALED, vsync=1)
+screen = pygame.display.set_mode((screen_width, screen_height), flags=pygame.SCALED, vsync=1)
 screen_surface = pygame.Surface((screen_width, screen_height))
 clock = pygame.time.Clock()
 game = Game()
@@ -84,11 +81,10 @@ while True:
                 pygame.quit()
                 sys.exit()
         if event.type == game.switch_overworld:
-            game.wait = False
+            game.overworld.wait = False
 
     game.run()
     screen.blit(screen_surface, (0, 0))
-
     pygame.display.update()
     clock.tick(60)
 

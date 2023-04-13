@@ -17,7 +17,7 @@ class Node(AnimatedTile):
         self.detection_zone = pygame.Rect(self.rect.centerx - icon_speed * 1.5, self.rect.centery - icon_speed * 1.5,
                                           icon_speed * 3, icon_speed * 3)
 
-    def update(self):
+    def update(self, **kwargs):
         if self.status == 'available':
             self.animate()
         else:
@@ -40,12 +40,11 @@ class Icon(pygame.sprite.Sprite):
 class Overworld:
     def __init__(self, surface, create_level, start_level=0, max_level=0):
         # setup
-        self.icon = None
-        self.nodes = None
         self.display_surface = surface
         self.max_level = max_level
         self.current_level = start_level
         self.create_level = create_level
+        self.wait = True
 
         # movement logic
         self.moving = False
@@ -53,6 +52,8 @@ class Overworld:
         self.speed = 4
 
         # sprites
+        self.icon = None
+        self.nodes = None
         self.setup_nodes()
         self.setup_icon()
         self.sky = Sky(7, 'overworld')
@@ -90,7 +91,7 @@ class Overworld:
                 self.move_direction = self.get_movement_data(False)
                 self.current_level -= 1
                 self.moving = True
-            elif keys[pygame.K_SPACE]:
+            elif keys[pygame.K_SPACE] and not self.wait:
                 self.create_level(self.current_level)
 
     def get_movement_data(self, direction_forward=True):

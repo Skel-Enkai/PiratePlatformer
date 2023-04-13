@@ -101,8 +101,8 @@ class Player(pygame.sprite.Sprite):
                 self.display_surface.blit(pygame.transform.flip(dust_particle, True, False), pos)
 
     def get_input(self):
-        keys = pygame.key.get_pressed()
         if self.can_move:
+            keys = pygame.key.get_pressed()
             if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and self.direction.x <= 2:
                 self.direction.x += 0.4
                 self.facing_right = True
@@ -110,16 +110,16 @@ class Player(pygame.sprite.Sprite):
                 self.direction.x -= 0.4
                 self.facing_right = False
 
-        if (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y == 0:
-            self.jump = True
-            self.create_jump_particles(self.rect.midbottom)
-        elif not (keys[pygame.K_SPACE] or keys[pygame.K_w]):
-            if self.direction.y < -4 and not self.rebound:
-                self.direction.y = -4
-                self.jump = False
-            elif self.direction.y < -6 and self.rebound:
-                self.direction.y = -6
-                self.jump = False
+            if (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y == 0:
+                self.jump = True
+                self.create_jump_particles(self.rect.midbottom)
+            elif not (keys[pygame.K_SPACE] or keys[pygame.K_w]):
+                if self.direction.y < -4 and not self.rebound:
+                    self.direction.y = -4
+                    self.jump = False
+                elif self.direction.y < -6 and self.rebound:
+                    self.direction.y = -6
+                    self.jump = False
 
     def get_status(self):
         if self.direction.y < 0:

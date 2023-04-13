@@ -254,7 +254,7 @@ class Level:
 
     def check_win(self):
         if pygame.sprite.spritecollide(self.player.sprite, self.goal, False, pygame.sprite.collide_rect_ratio(0.6)):
-            self.create_overworld(self.level_number, self.new_max_level)
+            self.create_overworld(self.new_max_level)
 
     def check_coin_collisions(self):
         collided_coins = pygame.sprite.spritecollide(self.player.sprite, self.coin_sprites, True,
@@ -275,9 +275,10 @@ class Level:
                         player.rebound = True
                         player.bounce(enemy)
                     elif not player.knockback:
-                        self.change_cur_health(-10)
+                        self.change_cur_health(-15)
                         player.knockback = True
-                        if player.direction.y < -2:
+                        player.jump = False
+                        if player.direction.y < -2 and (enemy.rect.top <= player.rect.top):
                             player.head_collision()
                         elif player.direction.y > 1:
                             player.slow_fall_collision(enemy.speed)
