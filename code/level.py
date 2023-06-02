@@ -263,7 +263,7 @@ class Level:
             for coin in collided_coins:
                 self.change_coins(coin.value)
 
-    def check_enemy_collisions(self):
+    def check_enemy_collisions(self, joysticks):
         player = self.player.sprite
         for enemy in self.enemy_sprites:
             if not enemy.dying:
@@ -284,8 +284,11 @@ class Level:
                             player.slow_fall_collision(enemy.speed)
                         else:
                             player.standard_collision(enemy)
+                        # joystick rumble
+                        for joystick in joysticks:
+                            joystick.rumble(1, 1, 300)
 
-    def run(self):
+    def run(self, joysticks):
         self.scroll_x()
 
         # decoration
@@ -324,7 +327,7 @@ class Level:
         self.dust_sprite.draw(self.display_surface)
 
         # player
-        self.player.update()
+        self.player.update(joysticks)
         self.horizontal_movement_collision()
         self.vertical_movement_collision()
         self.player.sprite.draw()
@@ -343,5 +346,5 @@ class Level:
         # checks
         self.check_death()
         self.check_win()
-        self.check_enemy_collisions()
+        self.check_enemy_collisions(joysticks)
         self.check_coin_collisions()

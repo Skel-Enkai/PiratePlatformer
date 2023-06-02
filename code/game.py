@@ -2,6 +2,8 @@ import pygame
 from ui import UI
 from level import Level
 from overworld import Overworld
+
+
 class Game:
     def __init__(self, surface):
         # game attributes
@@ -50,11 +52,11 @@ class Game:
             self.overworld = Overworld(self.screen_surface, self.create_level, self.current_level, self.max_level)
             self.status = 'overworld'
 
-    def run(self):
+    def run(self, joysticks):
         if self.status == 'overworld':
             self.overworld.run()
         elif self.status == 'level':
-            self.level.run()
+            self.level.run(joysticks)
             self.ui.show_health(self.cur_health, self.max_health)
             self.ui.show_coins(self.coins)
             self.check_game_over()
