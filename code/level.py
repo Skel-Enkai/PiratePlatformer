@@ -285,7 +285,8 @@ class Level:
                         else:
                             player.standard_collision(enemy)
                         # joystick rumble
-                        joystick.rumble(1, 1, 300)
+                        if joystick:
+                            joystick.rumble(1, 1, 300)
 
     def run(self, joystick, controller):
         self.scroll_x()
