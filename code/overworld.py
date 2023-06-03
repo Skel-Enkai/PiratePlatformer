@@ -79,10 +79,29 @@ class Overworld:
         if len(points) > 1:
             pygame.draw.lines(self.display_surface, '#a04f45', False, points, 6)
 
-    def input(self):
+    def input(self, joystick, controller):
+        if controller and joystick:
+            self.controller_input(joystick)
+        else:
+            self.keyboard_input()
+
+    def controller_input(self, joystick):
+        if joystick.get_name() == "PS5 Controller" and not self.moving and not self.wait:
+            if joystick.get_button(14) and self.current_level < self.max_level:
+                self.move_direction = self.get_movement_data(True)
+                self.current_level += 1
+                self.moving = True
+            elif joystick.get_button(13) and self.current_level > 0:
+                self.move_direction = self.get_movement_data(False)
+                self.current_level -= 1
+                self.moving = True
+            elif joystick.get_button(0):
+                self.create_level(self.current_level)
+
+    def keyboard_input(self):
         keys = pygame.key.get_pressed()
 
-        if not self.moving:
+        if not self.moving and not self.wait:
             if keys[pygame.K_RIGHT] and self.current_level < self.max_level:
                 self.move_direction = self.get_movement_data(True)
                 self.current_level += 1
@@ -91,7 +110,7 @@ class Overworld:
                 self.move_direction = self.get_movement_data(False)
                 self.current_level -= 1
                 self.moving = True
-            elif keys[pygame.K_SPACE] and not self.wait:
+            elif keys[pygame.K_SPACE]:
                 self.create_level(self.current_level)
 
     def get_movement_data(self, direction_forward=True):
@@ -120,7 +139,7 @@ class Overworld:
         self.nodes.draw(self.display_surface)
         self.icon.draw(self.display_surface)
 
-    def run(self):
-        self.input()
+    def run(self, joystick, controller):
+        self.input(joystick, controller)
         self.update_icon_pos()
         self.draw()

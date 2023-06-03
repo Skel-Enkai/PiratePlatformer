@@ -11,6 +11,7 @@ screen_surface = pygame.Surface((screen_width, screen_height))
 clock = pygame.time.Clock()
 game = Game(screen_surface)
 joysticks = []
+current_controller = 0
 
 while True:
     for event in pygame.event.get():
@@ -21,14 +22,20 @@ while True:
             if event.key == pygame.K_ESCAPE:
                 pygame.quit()
                 sys.exit()
+            game.controller = False
         elif event.type == game.switch_overworld:
             game.overworld.wait = False
         elif event.type == pygame.JOYDEVICEADDED or event.type == pygame.JOYDEVICEREMOVED:
             joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
         elif event.type == pygame.JOYBUTTONDOWN:
+            game.controller = True
+            current_controller = event.joy
             print(event)
 
-    game.run(joysticks)
+    if joysticks:
+        game.run(joysticks[current_controller])
+    else:
+        game.run()
     screen.blit(screen_surface, (0, 0))
     pygame.display.update()
     clock.tick(60)

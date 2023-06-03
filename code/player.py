@@ -100,9 +100,9 @@ class Player(pygame.sprite.Sprite):
                 pos = self.rect.bottomright - pygame.math.Vector2(-3, 12)
                 self.display_surface.blit(pygame.transform.flip(dust_particle, True, False), pos)
 
-    def control_player(self, joysticks):
-        if len(joysticks) >= 1:
-            self.joystick_input(joysticks)
+    def control_player(self, joystick, controller):
+        if controller and joystick:
+            self.joystick_input(joystick)
         else:
             self.keyboard_input()
 
@@ -127,26 +127,25 @@ class Player(pygame.sprite.Sprite):
                     self.direction.y = -6
                     self.jump = False
 
-    def joystick_input(self, joysticks):
-        for joystick in joysticks:
-            if joystick.get_name() == "PS5 Controller" and self.can_move:
-                if joystick.get_button(14) and self.direction.x <= 2:
-                    self.direction.x += 0.4
-                    self.facing_right = True
-                elif joystick.get_button(13) and self.direction.x >= -2:
-                    self.direction.x -= 0.4
-                    self.facing_right = False
+    def joystick_input(self, joystick):
+        if joystick.get_name() == "PS5 Controller" and self.can_move:
+            if joystick.get_button(14) and self.direction.x <= 2:
+                self.direction.x += 0.4
+                self.facing_right = True
+            elif joystick.get_button(13) and self.direction.x >= -2:
+                self.direction.x -= 0.4
+                self.facing_right = False
 
-                if (joystick.get_button(0) or joystick.get_button(11)) and self.direction.y == 0:
-                    self.jump = True
-                    self.create_jump_particles(self.rect.midbottom)
-                elif not (joystick.get_button(0) or joystick.get_button(11)):
-                    if self.direction.y < -4 and not self.rebound:
-                        self.direction.y = -4
-                        self.jump = False
-                    elif self.direction.y < -6 and self.rebound:
-                        self.direction.y = -6
-                        self.jump = False
+            if (joystick.get_button(0) or joystick.get_button(11)) and self.direction.y == 0:
+                self.jump = True
+                self.create_jump_particles(self.rect.midbottom)
+            elif not (joystick.get_button(0) or joystick.get_button(11)):
+                if self.direction.y < -4 and not self.rebound:
+                    self.direction.y = -4
+                    self.jump = False
+                elif self.direction.y < -6 and self.rebound:
+                    self.direction.y = -6
+                    self.jump = False
 
     def get_status(self):
         if self.direction.y < 0:
@@ -209,8 +208,8 @@ class Player(pygame.sprite.Sprite):
         self.dust_animate()
         # pygame.draw.rect(self.display_surface, 'Red', self.rect)
 
-    def update(self, joysticks):
-        self.control_player(joysticks)
+    def update(self, joystick, controller):
+        self.control_player(joystick, controller)
         self.get_status()
         self.reset_x()
         if not self.knockback:

@@ -19,10 +19,13 @@ class Game:
         self.overworld = Overworld(self.screen_surface, self.create_level, 0, self.max_level)
         self.status = 'overworld'
         self.switch_overworld = pygame.event.custom_type()
-        pygame.time.set_timer(self.switch_overworld, 500)
+        pygame.time.set_timer(self.switch_overworld, 600)
 
         # ui
         self.ui = UI(self.screen_surface)
+
+        # controller
+        self.controller = False
 
     def create_level(self, current_level):
         self.current_level = current_level
@@ -35,7 +38,7 @@ class Game:
             self.max_level = new_max_level
         self.overworld = Overworld(self.screen_surface, self.create_level, self.current_level, self.max_level)
         self.status = 'overworld'
-        pygame.time.set_timer(self.switch_overworld, 1000)
+        pygame.time.set_timer(self.switch_overworld, 1200)
 
     def change_coins(self, amount):
         self.coins += amount
@@ -52,11 +55,11 @@ class Game:
             self.overworld = Overworld(self.screen_surface, self.create_level, self.current_level, self.max_level)
             self.status = 'overworld'
 
-    def run(self, joysticks):
+    def run(self, joystick=[]):
         if self.status == 'overworld':
-            self.overworld.run()
+            self.overworld.run(joystick, self.controller)
         elif self.status == 'level':
-            self.level.run(joysticks)
+            self.level.run(joystick, self.controller)
             self.ui.show_health(self.cur_health, self.max_health)
             self.ui.show_coins(self.coins)
             self.check_game_over()
