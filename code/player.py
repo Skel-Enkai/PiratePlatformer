@@ -40,6 +40,9 @@ class Player(pygame.sprite.Sprite):
         self.knockback = False
         self.can_move = True
 
+        # controller toggle
+        self.controller_toggle = False
+
     def import_character_assets(self):
         character_path = '../graphics/character/'
         self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'hit': []}
