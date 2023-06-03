@@ -42,7 +42,7 @@ class Player(pygame.sprite.Sprite):
 
     def import_character_assets(self):
         character_path = '../graphics/character/'
-        self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'hit': []}
+        self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'hit': [], 'attack1': []}
 
         for animation in self.animations.keys():
             full_path = character_path + animation
