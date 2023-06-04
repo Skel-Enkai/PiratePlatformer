@@ -276,8 +276,7 @@ class Level:
                         player.bounce(enemy)
                     elif not player.knockback:
                         self.change_cur_health(-15)
-                        player.knockback = True
-                        player.jump = False
+                        player.knockback_init()
                         if player.direction.y < -2 and (enemy.rect.top <= player.rect.top):
                             player.head_collision()
                         elif player.direction.y > 1:

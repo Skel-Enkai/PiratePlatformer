@@ -10,7 +10,6 @@ class Player(pygame.sprite.Sprite):
         self.import_character_assets()
         self.frame_index = 0
         self.animations_speed = 0.15
-        self.frame_knockback = 0
         self.image = self.animations['idle'][0]
         self.rect = self.image.get_rect(topleft=pos)
         self.rect = self.rect.inflate(-55, 0)
@@ -53,12 +52,10 @@ class Player(pygame.sprite.Sprite):
 
     def animate(self):
         animation = self.animations[self.status]
-
-        # loop over frame index
         self.frame_index += self.animations_speed
         if self.frame_index >= len(animation):
             self.frame_index = 0
-
+            self.reset_status()
         image = animation[int(self.frame_index)]
         if self.facing_right:
             self.image = image
@@ -66,24 +63,27 @@ class Player(pygame.sprite.Sprite):
             flipped_image = pygame.transform.flip(image, True, False)
             self.image = flipped_image
 
-    def knockback_anim(self):
-        animation = self.animations['hit']
-        image = animation[int(self.frame_knockback)]
-        if self.facing_right:
-            self.image = image
-        else:
-            flipped_image = pygame.transform.flip(image, True, False)
-            self.image = flipped_image
-
-        # check for end of animation
-        if self.frame_knockback == 0:
-            self.can_move = False
-        self.frame_knockback += 0.1
-        if self.frame_knockback >= len(animation):
+    def reset_status(self):
+        if not self.should_reset_status():
+            self.animations_speed = 0.15
             self.knockback = False
-            self.frame_knockback = 0
-        elif self.frame_knockback >= 2:
-            self.can_move = True
+            self.status = 'None'
+            self.get_status()
+
+    def should_reset_status(self):
+        should_reset = ['hit', 'attack1']
+        for anim in should_reset:
+            if self.status == anim:
+                return False
+        return True
+
+    def knockback_init(self):
+        self.frame_index = 0
+        self.can_move = False
+        self.jump = False
+        self.knockback = True
+        self.animations_speed = 0.1
+        self.status = 'hit'
 
     def dust_animate(self):
         if self.status == 'run' and self.on_ground:
@@ -101,6 +101,8 @@ class Player(pygame.sprite.Sprite):
                 self.display_surface.blit(pygame.transform.flip(dust_particle, True, False), pos)
 
     def control_player(self, joystick, controller):
+        if self.knockback and self.frame_index >= 2:
+            self.can_move = True
         if controller and joystick:
             self.joystick_input(joystick)
         else:
@@ -148,16 +150,20 @@ class Player(pygame.sprite.Sprite):
                     self.jump = False
 
     def get_status(self):
-        if self.direction.y < 0:
-            self.status = 'jump'
-        elif self.direction.y > 1:
-            self.status = 'fall'
-            self.rebound = False
-        else:
-            if self.direction.x == 0:
-                self.status = 'idle'
+        current = self.status
+        if self.should_reset_status():
+            if self.direction.y < 0:
+                self.status = 'jump'
+            elif self.direction.y > 1:
+                self.status = 'fall'
+                self.rebound = False
             else:
-                self.status = 'run'
+                if self.direction.x == 0:
+                    self.status = 'idle'
+                else:
+                    self.status = 'run'
+        if self.status != current:
+            self.frame_index = 0
 
     def apply_gravity(self):
         if self.jump:
@@ -210,9 +216,6 @@ class Player(pygame.sprite.Sprite):
 
     def update(self, joystick, controller):
         self.control_player(joystick, controller)
-        self.get_status()
         self.reset_x()
-        if not self.knockback:
-            self.animate()
-        else:
-            self.knockback_anim()
+        self.get_status()
+        self.animate()
