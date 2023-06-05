@@ -27,6 +27,7 @@ class Level:
         self.player = pygame.sprite.GroupSingle()
         self.goal = pygame.sprite.GroupSingle()
         self.player_setup(player_layout)
+        self.player_speed = self.player.sprite.speed
 
         # user interface
         self.change_coins = change_coins
@@ -179,7 +180,7 @@ class Level:
 
         else:
             self.world_shift = 0
-            player.speed = 2
+            player.speed = self.player_speed
 
     def horizontal_movement_collision(self):
         player = self.player.sprite
@@ -275,7 +276,7 @@ class Level:
                         player.rebound = True
                         player.bounce(enemy)
                     elif not player.knockback:
-                        self.change_cur_health(-15)
+                        self.change_cur_health(-20)
                         player.knockback_init()
                         if player.direction.y < -2 and (enemy.rect.top <= player.rect.top):
                             player.head_collision()

@@ -9,7 +9,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.import_character_assets()
         self.frame_index = 0
-        self.animations_speed = 0.15
+        self.animations_speed = 0.10
         self.image = self.animations['idle'][0]
         self.rect = self.image.get_rect(topleft=pos)
         self.rect = self.rect.inflate(-55, 0)
@@ -23,7 +23,7 @@ class Player(pygame.sprite.Sprite):
 
         # player movement
         self.direction = pygame.math.Vector2(0, 0)
-        self.speed = 2
+        self.speed = 1.8
         self.gravity = 0.4
         self.jump_speed = -2
         self.jump = False
@@ -65,7 +65,6 @@ class Player(pygame.sprite.Sprite):
 
     def reset_status(self):
         if not self.should_reset_status():
-            self.animations_speed = 0.15
             self.knockback = False
             self.status = 'None'
             self.get_status()
@@ -82,7 +81,6 @@ class Player(pygame.sprite.Sprite):
         self.can_move = False
         self.jump = False
         self.knockback = True
-        self.animations_speed = 0.1
         self.status = 'hit'
 
     def dust_animate(self):
@@ -151,6 +149,7 @@ class Player(pygame.sprite.Sprite):
 
     def get_status(self):
         current = self.status
+        self.animations_speed = 0.10
         if self.should_reset_status():
             if self.direction.y < 0:
                 self.status = 'jump'
@@ -162,6 +161,7 @@ class Player(pygame.sprite.Sprite):
                     self.status = 'idle'
                 else:
                     self.status = 'run'
+                    self.animations_speed = 0.15
         if self.status != current:
             self.frame_index = 0
 
