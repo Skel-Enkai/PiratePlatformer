@@ -25,6 +25,9 @@ while True:
             game.controller = False
         elif event.type == game.switch_overworld:
             game.overworld.wait = False
+        elif game.level:
+            if event.type == game.level.player.sprite.attack_timer:
+                game.level.player.sprite.can_attack = True
         elif event.type == pygame.JOYDEVICEADDED or event.type == pygame.JOYDEVICEREMOVED:
             joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
         elif event.type == pygame.JOYBUTTONDOWN:
@@ -39,5 +42,9 @@ while True:
     screen.blit(screen_surface, (0, 0))
     pygame.display.update()
     clock.tick(60)
+    fps = clock.get_fps()
+    if fps < 58:
+        pass
+        print(fps)
 
 # Setup Scalable Resolutions

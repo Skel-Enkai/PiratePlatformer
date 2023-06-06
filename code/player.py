@@ -12,7 +12,7 @@ class Player(pygame.sprite.Sprite):
         self.animations_speed = 0.10
         self.image = self.animations['idle'][0]
         self.rect = self.image.get_rect(topleft=pos)
-        self.rect = self.rect.inflate(-55, 0)
+        self.rect = self.rect.inflate(-55, -8)
 
         # dust particles
         self.import_dust_run_particles()
@@ -39,6 +39,10 @@ class Player(pygame.sprite.Sprite):
         self.knockback = False
         self.can_move = True
 
+        # timers
+        self.can_attack = True
+        self.attack_timer = pygame.event.custom_type()
+
     def import_character_assets(self):
         character_path = '../graphics/character/'
         self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'hit': [], 'attack1': []}
@@ -51,11 +55,12 @@ class Player(pygame.sprite.Sprite):
         self.dust_run_particles = import_folder("../graphics/character/dust_particles/run")
 
     def animate(self):
-        animation = self.animations[self.status]
         self.frame_index += self.animations_speed
+        animation = self.animations[self.status]
         if self.frame_index >= len(animation):
             self.frame_index = 0
             self.reset_status()
+            animation = self.animations[self.status]
         image = animation[int(self.frame_index)]
         if self.facing_right:
             self.image = image
@@ -109,13 +114,14 @@ class Player(pygame.sprite.Sprite):
     def keyboard_input(self):
         if self.can_move:
             keys = pygame.key.get_pressed()
+            # movement
             if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and self.direction.x <= 2:
                 self.direction.x += 0.4
                 self.facing_right = True
             elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and self.direction.x >= -2:
                 self.direction.x -= 0.4
                 self.facing_right = False
-
+            # jump
             if (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y == 0:
                 self.jump = True
                 self.create_jump_particles(self.rect.midbottom)
@@ -126,16 +132,20 @@ class Player(pygame.sprite.Sprite):
                 elif self.direction.y < -6 and self.rebound:
                     self.direction.y = -6
                     self.jump = False
+            # attacks
+            if keys[pygame.K_q] and self.on_ground:
+                self.stab()
 
     def joystick_input(self, joystick):
         if joystick.get_name() == "PS5 Controller" and self.can_move:
+            # movement
             if joystick.get_button(14) and self.direction.x <= 2:
                 self.direction.x += 0.4
                 self.facing_right = True
             elif joystick.get_button(13) and self.direction.x >= -2:
                 self.direction.x -= 0.4
                 self.facing_right = False
-
+            # jump
             if (joystick.get_button(0) or joystick.get_button(11)) and self.direction.y == 0:
                 self.jump = True
                 self.create_jump_particles(self.rect.midbottom)
@@ -146,11 +156,23 @@ class Player(pygame.sprite.Sprite):
                 elif self.direction.y < -6 and self.rebound:
                     self.direction.y = -6
                     self.jump = False
+            # attacks
+            if joystick.get_button(2) and self.on_ground:
+                self.stab()
+
+    def stab(self):
+        if self.can_attack:
+            self.status = 'attack1'
+            self.can_move = False
+            self.frame_index = 0
+            self.animations_speed = 0.10
+            self.can_attack = False
+            pygame.time.set_timer(self.attack_timer, 800)
 
     def get_status(self):
-        current = self.status
-        self.animations_speed = 0.10
         if self.should_reset_status():
+            current = self.status
+            self.animations_speed = 0.10
             if self.direction.y < 0:
                 self.status = 'jump'
             elif self.direction.y > 1:
@@ -162,8 +184,9 @@ class Player(pygame.sprite.Sprite):
                 else:
                     self.status = 'run'
                     self.animations_speed = 0.15
-        if self.status != current:
-            self.frame_index = 0
+            if self.status != current:
+                self.frame_index = 0
+                self.can_move = True
 
     def apply_gravity(self):
         if self.jump:
@@ -210,7 +233,11 @@ class Player(pygame.sprite.Sprite):
         self.direction.y = -1 * abs(force)
 
     def draw(self):
-        pygame.Surface.blit(self.display_surface, self.image, self.rect.move(-28, 0))
+        if self.status == 'attack1':
+            offset = -65
+        else:
+            offset = -28
+        pygame.Surface.blit(self.display_surface, self.image, self.rect.move(offset, -8))
         self.dust_animate()
         # pygame.draw.rect(self.display_surface, 'Red', self.rect)
 
