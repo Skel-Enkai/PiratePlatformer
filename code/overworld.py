@@ -102,11 +102,11 @@ class Overworld:
         keys = pygame.key.get_pressed()
 
         if not self.moving and not self.wait:
-            if keys[pygame.K_RIGHT] and self.current_level < self.max_level:
+            if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and self.current_level < self.max_level:
                 self.move_direction = self.get_movement_data(True)
                 self.current_level += 1
                 self.moving = True
-            elif keys[pygame.K_LEFT] and self.current_level > 0:
+            elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and self.current_level > 0:
                 self.move_direction = self.get_movement_data(False)
                 self.current_level -= 1
                 self.moving = True
