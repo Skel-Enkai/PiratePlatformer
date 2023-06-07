@@ -23,7 +23,7 @@ class Player(pygame.sprite.Sprite):
 
         # player movement
         self.direction = pygame.math.Vector2(0, 0)
-        self.speed = 1.8
+        self.speed = 1.6
         self.gravity = 0.4
         self.jump_speed = -2
         self.jump = False
@@ -116,10 +116,10 @@ class Player(pygame.sprite.Sprite):
             keys = pygame.key.get_pressed()
             # movement
             if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and self.direction.x <= 2:
-                self.direction.x += 0.4
+                self.direction.x += 0.2
                 self.facing_right = True
             elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and self.direction.x >= -2:
-                self.direction.x -= 0.4
+                self.direction.x -= 0.2
                 self.facing_right = False
             # jump
             if (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y == 0:
@@ -140,10 +140,10 @@ class Player(pygame.sprite.Sprite):
         if joystick.get_name() == "PS5 Controller" and self.can_move:
             # movement
             if joystick.get_button(14) and self.direction.x <= 2:
-                self.direction.x += 0.4
+                self.direction.x += 0.2
                 self.facing_right = True
             elif joystick.get_button(13) and self.direction.x >= -2:
-                self.direction.x -= 0.4
+                self.direction.x -= 0.2
                 self.facing_right = False
             # jump
             if (joystick.get_button(0) or joystick.get_button(11)) and self.direction.y == 0:
@@ -191,17 +191,17 @@ class Player(pygame.sprite.Sprite):
     def apply_gravity(self):
         if self.jump:
             self.direction.y += self.jump_speed
-            if self.direction.y <= -12:
+            if self.direction.y <= -10:
                 self.jump = False
         else:
             self.direction.y += self.gravity
         self.rect.y += self.direction.y
 
     def reset_x(self):
-        if self.direction.x >= 0.4:
-            self.direction.x -= 0.3
-        elif self.direction.x <= -0.4:
-            self.direction.x += 0.3
+        if self.direction.x >= 0.2:
+            self.direction.x -= 0.1
+        elif self.direction.x <= -0.2:
+            self.direction.x += 0.1
         else:
             self.direction.x = 0
 
@@ -218,7 +218,7 @@ class Player(pygame.sprite.Sprite):
     def slow_fall_collision(self, enemy_speed):
         self.rebound = True
         self.rect.y += -10
-        self.direction.y = -7
+        self.direction.y = -abs(self.direction.y)
         self.direction.x = enemy_speed
 
     def standard_collision(self, enemy):

@@ -1,10 +1,10 @@
 import pygame
-
 from decoration import Sky
 from tiles import AnimatedTile
 from game_data import levels
 
 
+# bug should be resolved now, however it was already rare to trigger and so pretty hard to test.
 class Node(AnimatedTile):
     def __init__(self, size, x, y, status, icon_speed, path, anim_speed=0.10):
         super().__init__(size, x, y, path, anim_speed)
@@ -114,7 +114,7 @@ class Overworld:
                 self.create_level(self.current_level)
 
     def get_movement_data(self, direction_forward=True):
-        start = pygame.math.Vector2(self.nodes.sprites()[self.current_level].rect.center)
+        start = pygame.math.Vector2(self.icon.sprite.rect.center)
         if direction_forward:
             end = pygame.math.Vector2(self.nodes.sprites()[self.current_level + 1].rect.center)
         else:
@@ -130,7 +130,7 @@ class Overworld:
             if target_node.detection_zone.collidepoint(self.icon.sprite.pos):
                 self.moving = False
                 self.move_direction = pygame.math.Vector2(0, 0)
-                pygame.time.wait(60)
+                pygame.time.wait(120)
 
     def draw(self):
         self.nodes.update()
