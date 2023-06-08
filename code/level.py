@@ -168,17 +168,17 @@ class Level:
         player = self.player.sprite
         player_x = player.rect.centerx
         direction_x = player.direction.x
-        speed = 2
+        speed = round(player.direction.x * self.player_speed)
 
         if player_x < (screen_width // 3) and direction_x < 0 and self.world_offset < 0:
             player.speed = 0
-            self.world_shift = -round(player.direction.x * speed)
-            self.world_offset -= round(player.direction.x * speed)
+            self.world_shift = -speed
+            self.world_offset -= speed
 
         elif player_x > (screen_width - screen_width // 3) and direction_x > 0 and \
                 self.world_length >= -self.world_offset + screen_width + 10:
-            self.world_shift = -round(player.direction.x * speed)
-            self.world_offset -= round(player.direction.x * speed)
+            self.world_shift = -speed
+            self.world_offset -= speed
             player.speed = 0
 
         else:
@@ -192,6 +192,7 @@ class Level:
             # print('player speed=' + str(player.speed))
             # print('player.direction.x =' + str(player.direction.x))
             player.rect.x += round(player.direction.x * player.speed)
+            # print(round(player.direction.x * player.speed))
 
         for sprite in self.crate_sprites.sprites():
             if sprite.hitbox_rect.colliderect(player.rect):

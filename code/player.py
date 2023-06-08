@@ -22,7 +22,7 @@ class Player(pygame.sprite.Sprite):
 
         # player movement
         self.direction = pygame.math.Vector2(0, 0)
-        self.speed = 1.6
+        self.speed = 1
         self.gravity = 0.4
         self.jump_speed = -2
         self.jump = False
@@ -118,10 +118,10 @@ class Player(pygame.sprite.Sprite):
         if self.can_move:
             keys = pygame.key.get_pressed()
             # movement
-            if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and self.direction.x <= 2:
+            if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and self.direction.x <= 3:
                 self.direction.x += 0.2
                 self.facing_right = True
-            elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and self.direction.x >= -2:
+            elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and self.direction.x >= -3:
                 self.direction.x -= 0.2
                 self.facing_right = False
             # jump
@@ -142,10 +142,10 @@ class Player(pygame.sprite.Sprite):
     def joystick_input(self, joystick):
         if joystick.get_name() == "PS5 Controller" and self.can_move:
             # movement
-            if joystick.get_button(14) and self.direction.x <= 2:
+            if joystick.get_button(14) and self.direction.x <= 3:
                 self.direction.x += 0.2
                 self.facing_right = True
-            elif joystick.get_button(13) and self.direction.x >= -2:
+            elif joystick.get_button(13) and self.direction.x >= -3:
                 self.direction.x -= 0.2
                 self.facing_right = False
             # jump

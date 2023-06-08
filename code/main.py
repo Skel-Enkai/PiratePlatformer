@@ -53,6 +53,6 @@ while True:
     fps = clock.get_fps()
     if fps < 58:
         pass
-        print(fps)
+        # print(fps)
 
 # Setup Scalable Resolutions
