@@ -2,6 +2,7 @@ import pygame
 from tiles import AnimatedTile
 from random import randint
 from support import import_folder
+from math import copysign
 
 
 # noinspection PyAttributeOutsideInit
@@ -10,7 +11,7 @@ class Enemy(AnimatedTile):
         super().__init__(size, x, y, '../graphics/enemy/run')
         self.rect = self.image.get_rect(topleft=(x, y))
         self.rect.y += size - self.image.get_height()
-        self.speed = randint(1, 3)
+        self.speed = randint(1, 4)
         self.previous_speed = 0
         self.health = 100
         self.knockback = False
@@ -19,8 +20,19 @@ class Enemy(AnimatedTile):
         self.knockback_frames = import_folder('../graphics/enemy/Hit')
         self.death_frames = import_folder('../graphics/enemy/DeadHit')
 
+        # toggles
+        self.skip_frame = True
+
     def move(self):
-        self.rect.x += self.speed
+        if abs(self.speed) == 4:
+            self.rect.x += copysign(2, self.speed)
+        elif abs(self.speed) == 2:
+            self.rect.x += copysign(1, self.speed)
+        elif not self.skip_frame:
+            self.rect.x += self.speed
+            self.skip_frame = True
+        else:
+            self.skip_frame = False
 
     def reverse(self):
         self.speed *= -1
