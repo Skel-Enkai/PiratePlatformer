@@ -18,7 +18,6 @@ class Player(pygame.sprite.Sprite):
         self.import_dust_run_particles()
         self.dust_frame_index = 0
         self.dust_animations_speed = 0.15
-        self.display_surface = surface
         self.create_jump_particles = create_jump_particles
 
         # player movement
@@ -42,6 +41,10 @@ class Player(pygame.sprite.Sprite):
         # timers
         self.can_attack = True
         self.attack_timer = pygame.event.custom_type()
+
+        # surfaces
+        self.display_surface = surface
+        self.temp = None
 
     def import_character_assets(self):
         character_path = '../graphics/character/'
@@ -168,6 +171,15 @@ class Player(pygame.sprite.Sprite):
             self.animations_speed = 0.10
             self.can_attack = False
             pygame.time.set_timer(self.attack_timer, 800)
+            self.create_hitbox_stab()
+
+    def create_hitbox_stab(self):
+        if self.facing_right:
+            self.temp = pygame.Rect(self.rect.topleft, (100, 50))
+        else:
+            pos = self.rect.topright
+            pos = (pos[0]-100, pos[1])
+            self.temp = pygame.Rect(pos, (100, 50))
 
     def get_status(self):
         if self.should_reset_status():
@@ -187,6 +199,7 @@ class Player(pygame.sprite.Sprite):
             if self.status != current:
                 self.frame_index = 0
                 self.can_move = True
+                self.temp = None
 
     def apply_gravity(self):
         if self.jump:
@@ -237,9 +250,13 @@ class Player(pygame.sprite.Sprite):
             offset = -65
         else:
             offset = -28
-        pygame.Surface.blit(self.display_surface, self.image, self.rect.move(offset, -8))
+        self.display_surface.blit(self.image, self.rect.move(offset, -8))
         self.dust_animate()
-        # pygame.draw.rect(self.display_surface, 'Red', self.rect)
+        if self.temp:
+            hitbox = pygame.Surface((self.temp.width, self.temp.height))
+            hitbox.fill(pygame.Color(255, 0, 0))
+            hitbox.set_alpha(150)
+            self.display_surface.blit(hitbox, self.temp)
 
     def update(self, joystick, controller):
         self.control_player(joystick, controller)

@@ -13,6 +13,8 @@ class Game:
         self.max_health = 100
         self.cur_health = 100
         self.coins = 0
+
+        # surfaces
         self.screen_surface = surface
 
         # overworld creation

@@ -12,8 +12,8 @@ from tiles import *
 # noinspection PyAttributeOutsideInit,PyTypeChecker,PyUnboundLocalVariable
 class Level:
     def __init__(self, level_number, surface, create_overworld, change_coins, change_cur_health):
+        # attributes
         self.create_overworld = create_overworld
-        self.display_surface = surface
         self.level_number = level_number
         level_data = levels[level_number]
         self.new_max_level = level_data['unlock']
@@ -21,6 +21,9 @@ class Level:
         self.world_shift = -2
         self.world_offset = 0
         self.current_x = 0
+
+        # surface
+        self.display_surface = surface
 
         # player
         player_layout = import_csv_layout(level_data['player'])
