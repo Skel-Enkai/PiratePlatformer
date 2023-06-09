@@ -44,7 +44,7 @@ class Player(pygame.sprite.Sprite):
 
         # surfaces
         self.display_surface = surface
-        self.temp = None
+        self.attack_hitbox = None
 
     def import_character_assets(self):
         character_path = '../graphics/character/'
@@ -171,15 +171,23 @@ class Player(pygame.sprite.Sprite):
             self.animations_speed = 0.10
             self.can_attack = False
             pygame.time.set_timer(self.attack_timer, 800)
-            self.create_hitbox_stab()
+            self.attack_hitbox = pygame.Rect
 
-    def create_hitbox_stab(self):
-        if self.facing_right:
-            self.temp = pygame.Rect(self.rect.topleft, (100, 50))
-        else:
-            pos = self.rect.topright
-            pos = (pos[0]-100, pos[1])
-            self.temp = pygame.Rect(pos, (100, 50))
+    # update to fucntion that can take multipe attack types
+    def update_hitbox_stab(self):
+        height = 28
+        width = 40
+        offset = 15
+        if int(self.frame_index) == 1:
+            width = 70
+        if int(self.frame_index) == 2:
+            width = 30
+            offset = 60
+        self.attack_hitbox = pygame.Rect(self.rect.midbottom, (width, height))
+        self.attack_hitbox.x += offset
+        self.attack_hitbox.y -= (height + 1)
+        if not self.facing_right:
+            self.attack_hitbox.x -= (width + (offset * 2))
 
     def get_status(self):
         if self.should_reset_status():
@@ -199,7 +207,7 @@ class Player(pygame.sprite.Sprite):
             if self.status != current:
                 self.frame_index = 0
                 self.can_move = True
-                self.temp = None
+                self.attack_hitbox = None
 
     def apply_gravity(self):
         if self.jump:
@@ -252,14 +260,17 @@ class Player(pygame.sprite.Sprite):
             offset = -28
         self.display_surface.blit(self.image, self.rect.move(offset, -8))
         self.dust_animate()
-        if self.temp:
-            hitbox = pygame.Surface((self.temp.width, self.temp.height))
+        # for debug hitbox
+        if self.attack_hitbox and True:
+            hitbox = pygame.Surface((self.attack_hitbox.width, self.attack_hitbox.height))
             hitbox.fill(pygame.Color(255, 0, 0))
             hitbox.set_alpha(150)
-            self.display_surface.blit(hitbox, self.temp)
+            self.display_surface.blit(hitbox, self.attack_hitbox)
 
     def update(self, joystick, controller):
         self.control_player(joystick, controller)
         self.reset_x()
         self.get_status()
+        if self.attack_hitbox:
+            self.update_hitbox_stab()
         self.animate()
