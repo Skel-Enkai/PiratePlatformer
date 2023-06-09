@@ -1,8 +1,6 @@
 import pygame
 from tiles import AnimatedTile
 from support import import_folder
-# from random import randint
-
 
 # noinspection PyAttributeOutsideInit
 class Enemy(AnimatedTile):
@@ -10,7 +8,6 @@ class Enemy(AnimatedTile):
         super().__init__(size, x, y, '../graphics/enemy/run')
         self.rect = self.image.get_rect(topleft=(x, y))
         self.rect.y += size - self.image.get_height()
-        # self.speed = randint(1, 2)
         self.speed = 1
         self.previous_speed = 0
         self.health = 100
@@ -19,9 +16,6 @@ class Enemy(AnimatedTile):
         self.run_frames = self.frames
         self.knockback_frames = import_folder('../graphics/enemy/Hit')
         self.death_frames = import_folder('../graphics/enemy/DeadHit')
-
-        # toggles
-        self.skip_frame = True
 
     def move(self):
         self.rect.x += self.speed
