@@ -1,6 +1,8 @@
-import pygame
-from os import walk
 from csv import reader
+from os import walk
+
+import pygame.surface
+
 from settings import tile_size
 
 

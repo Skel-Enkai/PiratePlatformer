@@ -1,6 +1,7 @@
-import pygame
-from tiles import AnimatedTile
+import pygame.sprite
+
 from support import import_folder
+from tiles import AnimatedTile
 
 
 # noinspection PyAttributeOutsideInit

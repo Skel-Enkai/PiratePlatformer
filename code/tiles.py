@@ -1,4 +1,5 @@
-import pygame
+import pygame.sprite
+
 from support import import_folder
 
 

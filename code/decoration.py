@@ -1,8 +1,10 @@
-import pygame
-from settings import *
-from tiles import AnimatedTile, StaticTile
-from support import import_folder
 from random import choice, randint
+
+import pygame.sprite
+
+from settings import *
+from support import import_folder
+from tiles import AnimatedTile, StaticTile
 
 
 class Sky:

@@ -1,4 +1,5 @@
-import pygame
+import pygame.sprite
+
 from support import import_folder
 
 
@@ -25,6 +26,7 @@ class Effect(pygame.sprite.Sprite):
             self.image = self.frames[int(self.frame_index)]
             if should_flip > 0:
                 self.image = pygame.transform.flip(self.image, True, False)
+
     def update(self, x_shift):
-        self.animate(should_flip =self.enemy_speed)
+        self.animate(should_flip=self.enemy_speed)
         self.rect.x += x_shift
