@@ -11,9 +11,11 @@ screen_surface = pygame.Surface((screen_width, screen_height))
 
 clock = pygame.time.Clock()
 game = Game(screen_surface)
-joysticks = []
+joysticks = [None]
 current_controller = 0
 
+pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.JOYDEVICEADDED,
+                         pygame.JOYDEVICEREMOVED, pygame.JOYBUTTONDOWN])
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -41,17 +43,14 @@ while True:
             current_controller = event.joy
             print(event)
 
-    if joysticks:
-        game.run(joysticks[current_controller])
-    else:
-        game.run()
+    game.run(joysticks[current_controller])
 
     screen.blit(screen_surface, (0, 0))
     pygame.display.update()
 
     clock.tick(60)
     fps = clock.get_fps()
-    if fps < 58:
+    if fps:
         pass
         # print(fps)
 

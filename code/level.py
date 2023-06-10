@@ -292,63 +292,46 @@ class Level:
                         if joystick:
                             joystick.rumble(1, 1, 300)
 
-    def run(self, joystick, controller):
-        self.scroll_x()
-
-        # decoration
+    def draw(self):
         self.sky.draw(self.display_surface)
         self.cloud.draw(self.display_surface, self.world_shift)
-
-        # background palms
-        self.bg_palm_sprites.update(self.world_shift)
         self.bg_palm_sprites.draw(self.display_surface)
+        self.terrain_sprites.draw(self.display_surface)
+        self.grass_sprites.draw(self.display_surface)
+        self.crate_sprites.draw(self.display_surface)
+        self.coin_sprites.draw(self.display_surface)
+        self.enemy_sprites.draw(self.display_surface)
+        self.dust_sprite.draw(self.display_surface)
+        self.player.sprite.draw()
+        self.fg_palm_sprites.draw(self.display_surface)
+        self.goal.draw(self.display_surface)
 
-        # level tiles
+        # updates and draws together, could split for threading
+        self.water.draw(self.display_surface, self.world_shift)
+
+    def update(self, joystick, controller):
+        self.scroll_x()
+        self.bg_palm_sprites.update(self.world_shift)
         self.terrain_sprites.update(self.world_shift)
         self.terrain_collidable.update(self.world_shift)
-        self.terrain_sprites.draw(self.display_surface)
-
-        # grass
         self.grass_sprites.update(self.world_shift)
-        self.grass_sprites.draw(self.display_surface)
-
-        # crate
         self.crate_sprites.update(self.world_shift)
-        self.crate_sprites.draw(self.display_surface)
-
-        # coins
         self.coin_sprites.update(self.world_shift)
-        self.coin_sprites.draw(self.display_surface)
-
-        # enemy
-        self.enemy_sprites.update(self.world_shift)
         self.constraint_sprites.update(self.world_shift)
+        self.enemy_sprites.update(self.world_shift)
         self.enemy_collision_reverse()
-        self.enemy_sprites.draw(self.display_surface)
-
-        # dust particles
         self.dust_sprite.update(self.world_shift)
-        self.dust_sprite.draw(self.display_surface)
-
-        # player
         self.player.update(joystick, controller)
         self.horizontal_movement_collision()
         self.vertical_movement_collision()
-        self.player.sprite.draw()
-
-        # foreground palms
         self.fg_palm_sprites.update(self.world_shift)
-        self.fg_palm_sprites.draw(self.display_surface)
-
-        # goal
         self.goal.update(self.world_shift)
-        self.goal.draw(self.display_surface)
-
-        # water
-        self.water.draw(self.display_surface, self.world_shift)
-
         # checks
         self.check_death()
         self.check_win()
         self.check_enemy_collisions(joystick)
         self.check_coin_collisions()
+
+    def run(self, joystick, controller):
+        self.draw()
+        self.update(joystick, controller)

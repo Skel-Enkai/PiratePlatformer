@@ -2,6 +2,7 @@ import pygame
 from tiles import AnimatedTile
 from support import import_folder
 
+
 # noinspection PyAttributeOutsideInit
 class Enemy(AnimatedTile):
     def __init__(self, size, x, y):

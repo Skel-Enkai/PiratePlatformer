@@ -57,7 +57,7 @@ class Game:
             self.overworld = Overworld(self.screen_surface, self.create_level, self.current_level, self.max_level)
             self.status = 'overworld'
 
-    def run(self, joystick=[]):
+    def run(self, joystick=None):
         if self.status == 'overworld':
             self.overworld.run(joystick, self.controller)
         elif self.status == 'level':
