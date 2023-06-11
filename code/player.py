@@ -263,7 +263,7 @@ class Player(pygame.sprite.Sprite):
         self.display_surface.blit(self.image, self.rect.move(offset, -8))
         self.dust_animate()
         # for debug hitbox
-        if self.attack_hitbox and True:
+        if self.attack_hitbox and False:
             hitbox = pygame.Surface((self.attack_hitbox.width, self.attack_hitbox.height))
             hitbox.fill(pygame.Color(255, 0, 0))
             hitbox.set_alpha(150)

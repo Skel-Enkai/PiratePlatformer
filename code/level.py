@@ -1,4 +1,5 @@
 import pygame.sprite
+
 from decoration import *
 from enemy import Enemy
 from game_data import *
@@ -268,29 +269,40 @@ class Level:
             for coin in collided_coins:
                 self.change_coins(coin.value)
 
+    def player_enemy_collision(self, player, enemy, joystick):
+        if (player.rect.bottom <= enemy.rect.top + 28 and player.direction.y > 5) or player.direction.y > 8:
+            if player.direction.y > 9:
+                enemy.damage(-35)
+            player.rebound = True
+            player.bounce(enemy)
+        elif not player.knockback:
+            self.change_cur_health(-20)
+            player.knockback_init()
+            if player.direction.y < -2 and (enemy.rect.top <= player.rect.top):
+                player.head_collision()
+            elif player.direction.y > 1:
+                player.slow_fall_collision(enemy.speed)
+            else:
+                player.standard_collision(enemy)
+            # joystick rumble
+            if joystick:
+                joystick.rumble(1, 1, 300)
+
+    @staticmethod
+    def check_player_attack_hits(player, enemy):
+        if player.attack_hitbox:
+            if player.attack_hitbox.colliderect(enemy):
+                enemy.damage(-70)
+
     def check_enemy_collisions(self, joystick):
         player = self.player.sprite
         for enemy in self.enemy_sprites:
             if not enemy.dying:
                 if pygame.sprite.spritecollide(enemy, self.player, False,
                                                collided=pygame.sprite.collide_rect_ratio(0.8)):
-                    if (player.rect.bottom <= enemy.rect.top + 28 and player.direction.y > 5) or player.direction.y > 8:
-                        if player.direction.y > 9:
-                            enemy.damage(-35)
-                        player.rebound = True
-                        player.bounce(enemy)
-                    elif not player.knockback:
-                        self.change_cur_health(-20)
-                        player.knockback_init()
-                        if player.direction.y < -2 and (enemy.rect.top <= player.rect.top):
-                            player.head_collision()
-                        elif player.direction.y > 1:
-                            player.slow_fall_collision(enemy.speed)
-                        else:
-                            player.standard_collision(enemy)
-                        # joystick rumble
-                        if joystick:
-                            joystick.rumble(1, 1, 300)
+                    self.player_enemy_collision(player, enemy, joystick)
+                elif not enemy.knockback:
+                    self.check_player_attack_hits(player, enemy)
 
     def draw(self):
         self.sky.draw(self.display_surface)
@@ -320,12 +332,12 @@ class Level:
         self.constraint_sprites.update(self.world_shift)
         self.enemy_sprites.update(self.world_shift)
         self.enemy_collision_reverse()
+        self.fg_palm_sprites.update(self.world_shift)
+        self.goal.update(self.world_shift)
         self.dust_sprite.update(self.world_shift)
         self.player.update(joystick, controller)
         self.horizontal_movement_collision()
         self.vertical_movement_collision()
-        self.fg_palm_sprites.update(self.world_shift)
-        self.goal.update(self.world_shift)
         # checks
         self.check_death()
         self.check_win()
