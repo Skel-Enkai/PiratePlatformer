@@ -14,7 +14,7 @@ class Effect(pygame.sprite.Sprite):
         elif type == 'land':
             self.frames = import_folder("../graphics/character/dust_particles/land")
         elif type == 'enemy_die':
-            self.frames = import_folder("../graphics/enemy/DeadHit")
+            self.frames = import_folder("../graphics/enemies/fierce_tooth/dead_hit")
         self.image = self.frames[self.frame_index]
         self.rect = self.image.get_rect(midbottom=pos)
 

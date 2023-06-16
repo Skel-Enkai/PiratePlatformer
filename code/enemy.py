@@ -1,23 +1,28 @@
 import pygame.sprite
 
 from support import import_folder
-from tiles import AnimatedTile
 
 
 # noinspection PyAttributeOutsideInit
-class Enemy(AnimatedTile):
-    def __init__(self, size, x, y):
-        super().__init__(size, x, y, '../graphics/enemy/run')
-        self.rect = self.image.get_rect(topleft=(x, y))
-        self.rect.y += size - self.image.get_height()
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, anim_speed=0.10):
+        super().__init__()
+        # attributes
+        self.collide_rect = None
         self.speed = 1
         self.previous_speed = 0
         self.health = 100
         self.knockback = False
         self.dying = False
-        self.run_frames = self.frames
-        self.knockback_frames = import_folder('../graphics/enemy/Hit')
-        self.death_frames = import_folder('../graphics/enemy/DeadHit')
+
+        self.frame_index = 0
+        self.anim_speed = anim_speed
+
+        # empty attributes
+        self.rect = None
+        self.death_frames = None
+        self.knockback_frames = None
+        self.run_frames = None
 
     def move(self):
         self.rect.x += self.speed
@@ -57,4 +62,24 @@ class Enemy(AnimatedTile):
     def update(self, x_shift):
         self.move()
         self.rect.x += x_shift
+        self.collide_rect.centerx = self.rect.centerx
         self.animate()
+
+
+class FierceTooth(Enemy):
+    def __init__(self, size, x, y):
+        super().__init__(anim_speed=0.10)
+        self.run_frames = import_folder('../graphics/enemies/fierce_tooth/run')
+        self.knockback_frames = import_folder('../graphics/enemies/fierce_tooth/hit')
+        self.death_frames = import_folder('../graphics/enemies/fierce_tooth/dead_hit')
+        self.death_frames += import_folder('../graphics/enemies/fierce_tooth/dead_ground')
+        self.frames = self.run_frames
+
+        self.image = self.frames[self.frame_index]
+        self.rect = self.image.get_rect(topleft=(x, y))
+        self.rect.x -= 40
+        self.rect.y += 6
+
+        self.collide_rect = pygame.Rect(x, y, 34, 42)
+        self.collide_rect.bottom = self.rect.bottom
+        self.collide_rect.y -= 4

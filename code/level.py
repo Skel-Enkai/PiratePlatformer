@@ -1,7 +1,7 @@
 import pygame.sprite
 
 from decoration import *
-from enemy import Enemy
+from enemy import FierceTooth
 from game_data import *
 from particles import Effect
 from player import Player
@@ -63,7 +63,7 @@ class Level:
         bg_palm_layout = import_csv_layout(level_data['bg palms'])
         self.bg_palm_sprites = self.create_tile_group(bg_palm_layout, 'bg palms')
 
-        # enemy
+        # enemies
         enemy_layout = import_csv_layout(level_data['enemies'])
         self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
 
@@ -127,7 +127,7 @@ class Level:
                         sprite = Palm(tile_size, x, y, '../graphics/terrain/palm_bg', 64)
 
                     elif type == 'enemies':
-                        sprite = Enemy(tile_size, x, y)
+                        sprite = FierceTooth(tile_size, x, y)
 
                     elif type == 'constraint':
                         sprite = Tile(tile_size, x, y)
@@ -250,7 +250,8 @@ class Level:
 
     def enemy_collision_reverse(self):
         for enemy in self.enemy_sprites.sprites():
-            if pygame.sprite.spritecollide(enemy, self.constraint_sprites, False):
+            if pygame.sprite.spritecollide(enemy, self.constraint_sprites, False,
+                                           collided=pygame.sprite.collide_rect_ratio(0.5)):
                 enemy.rect.x -= enemy.speed
                 enemy.reverse()
 
@@ -291,15 +292,14 @@ class Level:
     @staticmethod
     def check_player_attack_hits(player, enemy):
         if player.attack_hitbox:
-            if player.attack_hitbox.colliderect(enemy):
+            if player.attack_hitbox.colliderect(enemy.collide_rect):
                 enemy.damage(-70)
 
     def check_enemy_collisions(self, joystick):
         player = self.player.sprite
         for enemy in self.enemy_sprites:
             if not enemy.dying:
-                if pygame.sprite.spritecollide(enemy, self.player, False,
-                                               collided=pygame.sprite.collide_rect_ratio(0.8)):
+                if pygame.Rect.colliderect(enemy.collide_rect, player.rect):
                     self.player_enemy_collision(player, enemy, joystick)
                 elif not enemy.knockback:
                     self.check_player_attack_hits(player, enemy)
@@ -320,6 +320,9 @@ class Level:
 
         # updates and draws together, could split for threading
         self.water.draw(self.display_surface, self.world_shift)
+
+        # for enemy in self.enemy_sprites:
+        #     pygame.draw.rect(self.display_surface, 'red', enemy.collide_rect)
 
     def update(self, joystick, controller):
         self.scroll_x()
