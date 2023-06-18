@@ -38,7 +38,6 @@ class Enemy(pygame.sprite.Sprite):
             self.speed = 0
             if self.health <= 0:
                 self.frames = self.death_frames
-                self.rect.y -= 8
                 self.dying = True
             else:
                 self.frames = self.knockback_frames
