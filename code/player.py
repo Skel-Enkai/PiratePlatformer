@@ -7,7 +7,6 @@ from support import import_folder
 
 # import correctly sized images, and use masks for collisions instead!
 
-
 # noinspection PyAttributeOutsideInit
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, surface, create_jump_particles):
@@ -91,8 +90,7 @@ class Player(pygame.sprite.Sprite):
 
     def knockback_init(self):
         self.frame_index = 0
-        self.can_move = False
-        self.jump = False
+        self.can_move = self.jump = False
         self.knockback = True
         self.status = 'hit'
 
@@ -171,28 +169,27 @@ class Player(pygame.sprite.Sprite):
     def stab(self):
         if self.can_attack:
             self.status = 'attack1'
-            self.can_move = False
+            self.can_move = self.can_attack = False
             self.frame_index = 0
             self.animations_speed = 0.10
-            self.can_attack = False
             pygame.time.set_timer(self.attack_timer, 800)
             self.attack_hitbox = pygame.Rect
 
     # update to fucntion that can take multipe attack types
     def update_hitbox_stab(self):
-        height = 28
-        width = 40
-        offset = 15
+        height, width, offset = 28, 40, 15
         if int(self.frame_index) == 1:
             width = 70
         if int(self.frame_index) == 2:
-            width = 30
-            offset = 60
+            width, offset = 30, 60
         self.attack_hitbox = pygame.Rect(self.rect.midbottom, (width, height))
         self.attack_hitbox.x += offset
         self.attack_hitbox.y -= (height + 1)
         if not self.facing_right:
             self.attack_hitbox.x -= (width + (offset * 2))
+
+        if self.status != 'attack1':
+            self.attack_hitbox = None
 
     def get_status(self):
         if self.should_reset_status():
@@ -212,7 +209,6 @@ class Player(pygame.sprite.Sprite):
             if self.status != current:
                 self.frame_index = 0
                 self.can_move = True
-                self.attack_hitbox = None
 
     def apply_gravity(self):
         if self.jump:
@@ -250,10 +246,10 @@ class Player(pygame.sprite.Sprite):
     def standard_collision(self, enemy):
         if math.copysign(1, enemy.speed) != math.copysign(1, self.direction.x) \
                 or self.direction.x == 0:
-            force = (-self.direction.x + enemy.speed) / 2 + math.copysign(2, enemy.speed)
+            force = (-self.direction.x/1.5) + enemy.speed
             enemy.speed *= -1
         else:
-            force = (-self.direction.x) - math.copysign(2, enemy.speed)
+            force = (-self.direction.x/1.5)
         self.direction.x = force
         self.rect.x += force
         self.direction.y = -1 * abs(force)
