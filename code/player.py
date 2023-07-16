@@ -50,6 +50,12 @@ class Player(pygame.sprite.Sprite):
         self.display_surface = surface
         self.attack_hitbox = None
 
+        # audio
+        self.channel = pygame.mixer.Channel(3)
+        self.channel.set_volume(0.2)
+        self.jump_sound = pygame.mixer.Sound('../audio/effects/jump.wav')
+        self.hit_sound = pygame.mixer.Sound('../audio/effects/hit.wav')
+
     def import_character_assets(self):
         character_path = '../graphics/character/'
         self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'hit': [], 'attack1': []}
@@ -131,6 +137,7 @@ class Player(pygame.sprite.Sprite):
             if (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y == 0:
                 self.jump = True
                 self.create_jump_particles(self.rect.midbottom)
+                self.channel.play(self.jump_sound)
             elif not (keys[pygame.K_SPACE] or keys[pygame.K_w]):
                 if self.direction.y < -4 and not self.rebound:
                     self.direction.y = -4
@@ -155,6 +162,7 @@ class Player(pygame.sprite.Sprite):
             if (joystick.get_button(0) or joystick.get_button(11)) and self.direction.y == 0:
                 self.jump = True
                 self.create_jump_particles(self.rect.midbottom)
+                self.channel.play(self.jump_sound)
             elif not (joystick.get_button(0) or joystick.get_button(11)):
                 if self.direction.y < -4 and not self.rebound:
                     self.direction.y = -4
@@ -246,10 +254,10 @@ class Player(pygame.sprite.Sprite):
     def standard_collision(self, enemy):
         if math.copysign(1, enemy.speed) != math.copysign(1, self.direction.x) \
                 or self.direction.x == 0:
-            force = (-self.direction.x/1.5) + enemy.speed
+            force = (-self.direction.x / 1.5) + enemy.speed
             enemy.speed *= -1
         else:
-            force = (-self.direction.x/1.5)
+            force = (-self.direction.x / 1.5)
         self.direction.x = force
         self.rect.x += force
         self.direction.y = -1 * abs(force)

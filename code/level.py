@@ -26,6 +26,12 @@ class Level:
         # surface
         self.display_surface = surface
 
+        # audio
+        self.effects_channel = pygame.mixer.Channel(2)
+        self.effects_channel.set_volume(0.2)
+        self.coin_sound = pygame.mixer.Sound('../audio/effects/coin.wav')
+        self.stomp_sound = pygame.mixer.Sound('../audio/effects/stomp.wav')
+
         # player
         player_layout = import_csv_layout(level_data['player'])
         self.player = pygame.sprite.GroupSingle()
@@ -267,6 +273,7 @@ class Level:
         collided_coins = pygame.sprite.spritecollide(self.player.sprite, self.coin_sprites, True,
                                                      pygame.sprite.collide_rect_ratio(0.6))
         if collided_coins:
+            self.effects_channel.play(self.coin_sound)
             for coin in collided_coins:
                 self.change_coins(coin.value)
 
@@ -274,6 +281,7 @@ class Level:
         if (player.rect.bottom <= enemy.rect.top + 28 and player.direction.y > 5) or player.direction.y > 8:
             if player.direction.y > 9:
                 enemy.damage(-35)
+                self.effects_channel.play(self.stomp_sound)
             player.rebound = True
             player.bounce(enemy)
         elif not player.knockback:
