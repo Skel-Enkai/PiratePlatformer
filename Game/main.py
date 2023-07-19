@@ -3,10 +3,8 @@ import sys
 
 import pygame
 
-from code.game import Game
-from code.settings import *
-
-# sys.path.append("code")
+from Game.code.game import Game
+from Game.code.settings import *
 
 # pygame.FULLSCREEN | pygame.SCALED (flags for fullscreen) # (vsync sets fps max to 60)
 # Pygame setup
