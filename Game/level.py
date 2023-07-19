@@ -1,13 +1,13 @@
 import pygame.sprite
 
-from Game.code.decoration import *
-from Game.code.enemy import FierceTooth
-from Game.code.game_data import *
-from Game.code.particles import Effect
-from Game.code.player import Player
-from Game.code.settings import screen_height, screen_width
-from Game.code.support import import_csv_layout, import_cut_graphic
-from Game.code.tiles import *
+from decoration import *
+from enemy import FierceTooth
+from game_data import *
+from particles import Effect
+from player import Player
+from settings import screen_height, screen_width
+from support import import_csv_layout, import_cut_graphic
+from tiles import *
 
 
 # noinspection PyAttributeOutsideInit,PyTypeChecker,PyUnboundLocalVariable

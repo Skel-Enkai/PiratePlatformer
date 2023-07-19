@@ -1,8 +1,8 @@
 import pygame.time
 
-from Game.code.level import Level
-from Game.code.overworld import Overworld
-from Game.code.ui import UI
+from level import Level
+from overworld import Overworld
+from ui import UI
 
 
 class Game:
