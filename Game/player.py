@@ -2,7 +2,7 @@ import math
 
 import pygame.sprite
 
-from Game.code.support import import_folder
+from support import import_folder
 
 
 # import correctly sized images, and use masks for collisions instead!

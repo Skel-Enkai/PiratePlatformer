@@ -1,8 +1,8 @@
 import pygame.sprite
 
-from Game.code.decoration import Sky
-from Game.code.game_data import levels
-from Game.code.tiles import AnimatedTile
+from decoration import Sky
+from game_data import levels
+from tiles import AnimatedTile
 
 
 # bug should be resolved now, however it was already rare to trigger and so pretty hard to test.
