@@ -9,7 +9,7 @@ from settings import *
 # pygame.FULLSCREEN | pygame.SCALED (flags for fullscreen) # (vsync sets fps max to 60)
 # Pygame setup
 pygame.init()
-screen = pygame.display.set_mode((screen_width, screen_height), flags=pygame.SCALED, vsync=1)
+screen = pygame.display.set_mode((screen_width, screen_height))
 screen_surface = pygame.Surface((screen_width, screen_height))
 
 clock = pygame.time.Clock()
@@ -54,10 +54,6 @@ async def main():
         pygame.display.update()
 
         clock.tick(60)
-        # fps = clock.get_fps()
-        # if fps:
-        #     pass
-        #     # print(fps)
         await asyncio.sleep(0)
 
 asyncio.run(main())
