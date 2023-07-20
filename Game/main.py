@@ -6,9 +6,12 @@ import pygame
 from game import Game
 from settings import *
 
+# initialise only needed
+pygame.font.init()
+pygame.mixer.init(channels=0)
+
 # pygame.FULLSCREEN | pygame.SCALED (flags for fullscreen) # (vsync sets fps max to 60)
 # Pygame setup
-pygame.init()
 screen = pygame.display.set_mode((screen_width, screen_height))
 screen_surface = pygame.Surface((screen_width, screen_height))
 
@@ -46,7 +49,6 @@ async def main():
             elif event.type == pygame.JOYBUTTONDOWN:
                 game.controller = True
                 current_controller = event.joy
-                print(event)
 
         game.run(joysticks[current_controller])
 
