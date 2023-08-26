@@ -5,8 +5,6 @@ import pygame.sprite
 from support import import_folder
 
 
-# import correctly sized images, and use masks for collisions instead!
-
 # noinspection PyAttributeOutsideInit
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, surface, create_jump_particles):
