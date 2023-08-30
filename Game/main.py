@@ -12,7 +12,8 @@ pygame.mixer.init(channels=0)
 
 # screen setup
 # pygame.FULLSCREEN | pygame.SCALED (flags for fullscreen) # (vsync sets fps max to 60)
-screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.init()
+screen = pygame.display.set_mode((screen_width, screen_height), flags=pygame.SCALED, vsync=1)
 screen_surface = pygame.Surface((screen_width, screen_height))
 
 # sets title as well as loads icon
@@ -24,7 +25,7 @@ pygame.display.set_icon(pygame_icon)
 clock = pygame.time.Clock()
 game = Game(screen_surface)
 pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.JOYDEVICEADDED,
-                         pygame.JOYDEVICEREMOVED, pygame.JOYBUTTONDOWN])
+                          pygame.JOYDEVICEREMOVED, pygame.JOYBUTTONDOWN])
 
 
 async def main():
@@ -55,17 +56,18 @@ async def main():
             elif event.type == pygame.JOYBUTTONDOWN:
                 game.controller = True
                 current_controller = event.joy
+                print(event)
 
         game.run(joysticks[current_controller])
 
         screen.blit(screen_surface, (0, 0))
         pygame.display.update()
 
+        clock.tick(60)
         # fps = clock.get_fps()
         # if fps:
-        #     print(fps)
-
-        clock.tick(60)
+        #     pass
+        #     # print(fps)
         await asyncio.sleep(0)
 
 asyncio.run(main())

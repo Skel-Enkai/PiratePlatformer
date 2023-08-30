@@ -1,7 +1,5 @@
 import math
-
 import pygame.sprite
-
 from support import import_folder
 
 
@@ -25,7 +23,7 @@ class Player(pygame.sprite.Sprite):
         # player movement
         self.direction = pygame.math.Vector2(0, 0)
         self.speed = 1
-        self.gravity = 0.4
+        self.gravity = 0.32
         self.jump_speed = -2
         self.jump = False
 
@@ -219,7 +217,7 @@ class Player(pygame.sprite.Sprite):
     def apply_gravity(self):
         if self.jump:
             self.direction.y += self.jump_speed
-            if self.direction.y <= -10:
+            if self.direction.y <= -7:
                 self.jump = False
         else:
             self.direction.y += self.gravity
