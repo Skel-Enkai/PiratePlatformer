@@ -311,6 +311,8 @@ class Level:
                     self.player_enemy_collision(player, enemy, joystick)
                 elif not enemy.knockback:
                     self.check_player_attack_hits(player, enemy)
+                    if enemy.attack:
+                        print('check')
 
     def draw(self):
         self.sky.draw(self.display_surface)

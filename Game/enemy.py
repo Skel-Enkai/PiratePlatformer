@@ -43,6 +43,43 @@ class Enemy(pygame.sprite.Sprite):
                 self.frames = self.knockback_frames
                 self.knockback = True
 
+    def update(self, x_shift):
+        self.rect.x += x_shift
+        self.collide_rect.centerx = self.rect.centerx
+
+
+class FierceTooth(Enemy):
+    def __init__(self, size, x, y):
+        super().__init__(anim_speed=0.10)
+        # flags
+        self.anticipation = False
+        self.attack = False
+
+        # animation frames
+        self.run_frames = import_folder('./graphics/enemies/fierce_tooth/run')
+        self.knockback_frames = import_folder('./graphics/enemies/fierce_tooth/hit')
+        self.death_frames = import_folder('./graphics/enemies/fierce_tooth/dead_hit')
+        self.death_frames += import_folder('./graphics/enemies/fierce_tooth/dead_ground')
+        self.anticipation_frames = import_folder('./graphics/enemies/fierce_tooth/anticipation')
+        self.attack_frames = import_folder('./graphics/enemies/fierce_tooth/attack')
+
+        self.frames = self.run_frames
+
+        # animation rect
+        self.image = self.frames[self.frame_index]
+        self.rect = self.image.get_rect(topleft=(x, y))
+        self.rect.x -= 40
+        self.rect.y += 6
+
+        # collision detection rect
+        self.collide_rect = pygame.Rect(x, y, 34, 42)
+        self.collide_rect.bottom = self.rect.bottom
+        self.collide_rect.y -= 4
+
+        # attack hitbox
+        self.attack_hitbox = None
+        self.counter = 0
+
     def animate(self):
         self.frame_index += self.anim_speed
         if self.frame_index > len(self.frames):
@@ -54,31 +91,32 @@ class Enemy(pygame.sprite.Sprite):
                 self.knockback = False
             elif self.dying:
                 self.kill()
+            elif self.anticipation:
+                self.frames = self.attack_frames
+                self.anticipation = False
+                self.attack = True
+            elif self.attack:
+                self.frames = self.run_frames
+                self.attack = False
         self.image = self.frames[int(self.frame_index)]
         if self.speed > 0 or self.previous_speed > 0:
             self.image = pygame.transform.flip(self.image, True, False)
 
+    def anticipate_attack(self):
+        self.anticipation = True
+        self.frames = self.anticipation_frames
+
+    def update_attack(self):
+        pass
+
     def update(self, x_shift):
+        self.counter += 1
+        if self.counter == 200:
+            self.anticipate_attack()
+            self.counter = 0
+        if self.attack:
+            self.update_attack()
         self.move()
         self.rect.x += x_shift
         self.collide_rect.centerx = self.rect.centerx
         self.animate()
-
-
-class FierceTooth(Enemy):
-    def __init__(self, size, x, y):
-        super().__init__(anim_speed=0.10)
-        self.run_frames = import_folder('./graphics/enemies/fierce_tooth/run')
-        self.knockback_frames = import_folder('./graphics/enemies/fierce_tooth/hit')
-        self.death_frames = import_folder('./graphics/enemies/fierce_tooth/dead_hit')
-        self.death_frames += import_folder('./graphics/enemies/fierce_tooth/dead_ground')
-        self.frames = self.run_frames
-
-        self.image = self.frames[self.frame_index]
-        self.rect = self.image.get_rect(topleft=(x, y))
-        self.rect.x -= 40
-        self.rect.y += 6
-
-        self.collide_rect = pygame.Rect(x, y, 34, 42)
-        self.collide_rect.bottom = self.rect.bottom
-        self.collide_rect.y -= 4

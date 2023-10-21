@@ -179,7 +179,7 @@ class Player(pygame.sprite.Sprite):
             pygame.time.set_timer(self.attack_timer, 800)
             self.attack_hitbox = pygame.Rect
 
-    # update to fucntion that can take multipe attack types
+    # update to function that can take multiple attack types
     def update_hitbox_stab(self):
         height, width, offset = 28, 40, 15
         if int(self.frame_index) == 1:
@@ -266,11 +266,11 @@ class Player(pygame.sprite.Sprite):
         self.display_surface.blit(self.image, self.rect.move(offset, -8))
         self.dust_animate()
         # for debug hitbox
-        if self.attack_hitbox and False:
-            hitbox = pygame.Surface((self.attack_hitbox.width, self.attack_hitbox.height))
-            hitbox.fill(pygame.Color(255, 0, 0))
-            hitbox.set_alpha(150)
-            self.display_surface.blit(hitbox, self.attack_hitbox)
+        # if self.attack_hitbox:
+        #     hitbox = pygame.Surface((self.attack_hitbox.width, self.attack_hitbox.height))
+        #     hitbox.fill(pygame.Color(255, 0, 0))
+        #     hitbox.set_alpha(150)
+        #     self.display_surface.blit(hitbox, self.attack_hitbox)
 
     def update(self, joystick, controller):
         self.control_player(joystick, controller)
