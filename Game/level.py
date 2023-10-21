@@ -12,7 +12,7 @@ from tiles import *
 
 # noinspection PyAttributeOutsideInit,PyTypeChecker,PyUnboundLocalVariable
 class Level:
-    def __init__(self, level_number, surface, create_overworld, change_coins, change_cur_health):
+    def __init__(self, level_number, surface, create_overworld, change_coins, change_cur_health, mute):
         # attributes
         self.create_overworld = create_overworld
         self.level_number = level_number
@@ -28,7 +28,10 @@ class Level:
 
         # audio
         self.effects_channel = pygame.mixer.Channel(2)
-        self.effects_channel.set_volume(0.2)
+        if mute:
+            self.effects_channel.set_volume(0.0)
+        else:
+            self.effects_channel.set_volume(0.2)
         self.coin_sound = pygame.mixer.Sound('./audio/effects/coin.wav')
         self.stomp_sound = pygame.mixer.Sound('./audio/effects/stomp.wav')
 
@@ -36,7 +39,7 @@ class Level:
         player_layout = import_csv_layout(level_data['player'])
         self.player = pygame.sprite.GroupSingle()
         self.goal = pygame.sprite.GroupSingle()
-        self.player_setup(player_layout)
+        self.player_setup(player_layout, mute)
         self.player_speed = self.player.sprite.speed
 
         # user interface
@@ -142,13 +145,13 @@ class Level:
 
         return sprite_group
 
-    def player_setup(self, layout):
+    def player_setup(self, layout, mute):
         for row_index, row in enumerate(layout):
             y = tile_size * row_index
             for col_index, val in enumerate(row):
                 x = tile_size * col_index
                 if val == '0':
-                    sprite = Player((x, y + 10), self.display_surface, self.create_jump_particles)
+                    sprite = Player((x, y + 10), self.display_surface, self.create_jump_particles, mute)
                     self.player.add(sprite)
                 elif val == '1':
                     hat_surface = pygame.image.load('./graphics/character/hat.png').convert_alpha()

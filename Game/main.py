@@ -46,6 +46,9 @@ async def main():
             elif event.type == game.switch_overworld:
                 game.overworld.wait = False
 
+            elif event.type == game.menu_wait:
+                game.input_wait = False
+
             elif game.level:
                 if event.type == game.level.player.sprite.attack_timer:
                     game.level.player.sprite.can_attack = True

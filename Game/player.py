@@ -1,11 +1,13 @@
 import math
+
 import pygame.sprite
+
 from support import import_folder
 
 
 # noinspection PyAttributeOutsideInit
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, surface, create_jump_particles):
+    def __init__(self, pos, surface, create_jump_particles, mute):
         super().__init__()
         self.import_character_assets()
         self.frame_index = 0
@@ -48,7 +50,10 @@ class Player(pygame.sprite.Sprite):
 
         # audio
         self.channel = pygame.mixer.Channel(3)
-        self.channel.set_volume(0.2)
+        if mute:
+            self.channel.set_volume(0.0)
+        else:
+            self.channel.set_volume(0.2)
         self.jump_sound = pygame.mixer.Sound('./audio/effects/jump.wav')
         self.hit_sound = pygame.mixer.Sound('./audio/effects/hit.wav')
 
