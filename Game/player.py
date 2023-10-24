@@ -12,9 +12,9 @@ class Player(pygame.sprite.Sprite):
         self.import_character_assets()
         self.frame_index = 0
         self.animations_speed = 0.10
-        self.image = self.animations['idle'][0]
+        self.image = self.animations['09-Idle Sword'][0]
         self.rect = self.image.get_rect(topleft=pos)
-        self.rect = self.rect.inflate(-55, -8)
+        self.collide_rect = self.rect.inflate(-94, -34)
 
         # dust particles
         self.import_dust_run_particles()
@@ -30,7 +30,7 @@ class Player(pygame.sprite.Sprite):
         self.jump = False
 
         # player status
-        self.status = 'idle'
+        self.status = '09-Idle Sword'
         self.facing_right = True
         self.on_ground = True
         self.on_ceiling = False
@@ -58,12 +58,15 @@ class Player(pygame.sprite.Sprite):
         self.hit_sound = pygame.mixer.Sound('./audio/effects/hit.wav')
 
     def import_character_assets(self):
-        character_path = './graphics/character/'
-        self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'hit': [], 'attack1': []}
+        character_path = './graphics/character/Captain Clown Nose with Sword/'
+        self.animations = {'09-Idle Sword': [], '10-Run Sword': [], '11-Jump Sword': [], '12-Fall Sword': [],
+                           '14-Hit Sword': [], '15-Attack 1': []}
 
         for animation in self.animations.keys():
             full_path = character_path + animation
             self.animations[animation] = import_folder(full_path)
+            for index, frame in enumerate(self.animations[animation]):
+                self.animations[animation][index] = pygame.transform.scale_by(frame, 2)
 
     def import_dust_run_particles(self):
         self.dust_run_particles = import_folder("./graphics/character/dust_particles/run")
@@ -89,7 +92,7 @@ class Player(pygame.sprite.Sprite):
             self.get_status()
 
     def should_reset_status(self):
-        should_reset = ['hit', 'attack1']
+        should_reset = ['14-Hit Sword', '15-Attack 1']
         for anim in should_reset:
             if self.status == anim:
                 return False
@@ -99,10 +102,10 @@ class Player(pygame.sprite.Sprite):
         self.frame_index = 0
         self.can_move = self.jump = False
         self.knockback = True
-        self.status = 'hit'
+        self.status = '14-Hit Sword'
 
     def dust_animate(self):
-        if self.status == 'run' and self.on_ground:
+        if self.status == '10-Run Sword' and self.on_ground:
             self.dust_frame_index += self.dust_animations_speed
             if self.dust_frame_index >= len(self.dust_run_particles):
                 self.dust_frame_index = 0
@@ -110,10 +113,10 @@ class Player(pygame.sprite.Sprite):
             dust_particle = self.dust_run_particles[int(self.dust_frame_index)]
 
             if self.facing_right:
-                pos = self.rect.bottomleft - pygame.math.Vector2(15, 12)
+                pos = self.collide_rect.bottomleft - pygame.math.Vector2(15, 10)
                 self.display_surface.blit(dust_particle, pos)
             else:
-                pos = self.rect.bottomright - pygame.math.Vector2(-3, 12)
+                pos = self.collide_rect.bottomright - pygame.math.Vector2(0, 10)
                 self.display_surface.blit(pygame.transform.flip(dust_particle, True, False), pos)
 
     def control_player(self, joystick, controller):
@@ -137,7 +140,7 @@ class Player(pygame.sprite.Sprite):
             # jump
             if (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y == 0:
                 self.jump = True
-                self.create_jump_particles(self.rect.midbottom)
+                self.create_jump_particles(self.collide_rect.midbottom)
                 self.channel.play(self.jump_sound)
             elif not (keys[pygame.K_SPACE] or keys[pygame.K_w]):
                 if self.direction.y < -4 and not self.rebound:
@@ -162,7 +165,7 @@ class Player(pygame.sprite.Sprite):
             # jump
             if (joystick.get_button(0) or joystick.get_button(11)) and self.direction.y == 0:
                 self.jump = True
-                self.create_jump_particles(self.rect.midbottom)
+                self.create_jump_particles(self.collide_rect.midbottom)
                 self.channel.play(self.jump_sound)
             elif not (joystick.get_button(0) or joystick.get_button(11)):
                 if self.direction.y < -4 and not self.rebound:
@@ -177,11 +180,11 @@ class Player(pygame.sprite.Sprite):
 
     def stab(self):
         if self.can_attack:
-            self.status = 'attack1'
+            self.status = '15-Attack 1'
             self.can_move = self.can_attack = False
             self.frame_index = 0
             self.animations_speed = 0.10
-            pygame.time.set_timer(self.attack_timer, 800)
+            pygame.time.set_timer(self.attack_timer, 1000)
             self.attack_hitbox = pygame.Rect
 
     # update to function that can take multiple attack types
@@ -197,7 +200,7 @@ class Player(pygame.sprite.Sprite):
         if not self.facing_right:
             self.attack_hitbox.x -= (width + (offset * 2))
 
-        if self.status != 'attack1':
+        if self.status != '15-Attack 1':
             self.attack_hitbox = None
 
     def get_status(self):
@@ -205,15 +208,15 @@ class Player(pygame.sprite.Sprite):
             current = self.status
             self.animations_speed = 0.10
             if self.direction.y < 0:
-                self.status = 'jump'
+                self.status = '11-Jump Sword'
             elif self.direction.y > 1:
-                self.status = 'fall'
+                self.status = '12-Fall Sword'
                 self.rebound = False
             else:
                 if self.direction.x == 0:
-                    self.status = 'idle'
+                    self.status = '09-Idle Sword'
                 else:
-                    self.status = 'run'
+                    self.status = '10-Run Sword'
                     self.animations_speed = 0.15
             if self.status != current:
                 self.frame_index = 0
@@ -226,7 +229,7 @@ class Player(pygame.sprite.Sprite):
                 self.jump = False
         else:
             self.direction.y += self.gravity
-        self.rect.y += self.direction.y
+        self.collide_rect.y += self.direction.y
 
     def reset_x(self):
         if self.direction.x >= 0.2:
@@ -239,16 +242,16 @@ class Player(pygame.sprite.Sprite):
     def bounce(self, enemy):
         self.jump = True
         self.direction.y = 0
-        self.rect.bottom = enemy.rect.top
+        self.collide_rect.bottom = enemy.collide_rect.top
 
     def head_collision(self):
-        self.rect.y += -self.direction.y
+        self.collide_rect.y += -self.direction.y
         self.direction.y = -(self.direction.y // 4)
         self.direction.x = -self.direction.x
 
     def slow_fall_collision(self, enemy_speed):
         self.rebound = True
-        self.rect.y += -10
+        self.collide_rect.y += -10
         self.direction.y = -abs(self.direction.y)
         self.direction.x = enemy_speed
 
@@ -260,22 +263,8 @@ class Player(pygame.sprite.Sprite):
         else:
             force = (-self.direction.x / 1.5)
         self.direction.x = force
-        self.rect.x += force
+        self.collide_rect.x += force
         self.direction.y = -1 * abs(force)
-
-    def draw(self):
-        if self.status == 'attack1':
-            offset = -65
-        else:
-            offset = -28
-        self.display_surface.blit(self.image, self.rect.move(offset, -8))
-        self.dust_animate()
-        # for debug hitbox
-        # if self.attack_hitbox:
-        #     hitbox = pygame.Surface((self.attack_hitbox.width, self.attack_hitbox.height))
-        #     hitbox.fill(pygame.Color(255, 0, 0))
-        #     hitbox.set_alpha(150)
-        #     self.display_surface.blit(hitbox, self.attack_hitbox)
 
     def update(self, joystick, controller):
         self.control_player(joystick, controller)
@@ -284,3 +273,4 @@ class Player(pygame.sprite.Sprite):
         if self.attack_hitbox:
             self.update_hitbox_stab()
         self.animate()
+        self.dust_animate()

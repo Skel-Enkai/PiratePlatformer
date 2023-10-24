@@ -24,8 +24,8 @@ pygame.display.set_icon(pygame_icon)
 # pygame setup
 clock = pygame.time.Clock()
 game = Game(screen_surface)
-pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.JOYDEVICEADDED,
-                          pygame.JOYDEVICEREMOVED, pygame.JOYBUTTONDOWN])
+pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.JOYDEVICEADDED, pygame.JOYDEVICEREMOVED,
+                          pygame.JOYBUTTONDOWN])
 
 
 async def main():
@@ -69,8 +69,7 @@ async def main():
         clock.tick(60)
         # fps = clock.get_fps()
         # if fps:
-        #     pass
-        #     # print(fps)
+        #     print(fps)
         await asyncio.sleep(0)
 
 asyncio.run(main())

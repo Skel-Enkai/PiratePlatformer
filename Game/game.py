@@ -87,30 +87,14 @@ class Game:
             if not self.mute_flag:
                 pygame.mixer.pause()
                 self.mute_flag = True
+                self.channel_effects.set_volume(0.0)
                 if self.level:
                     self.level.effects_channel.set_volume(0.0)
                     self.level.player.sprite.channel.set_volume(0.0)
             else:
                 self.mute_flag = False
                 pygame.mixer.unpause()
-                if self.level:
-                    self.level.effects_channel.set_volume(0.2)
-                    self.level.player.sprite.channel.set_volume(0.2)
-
-    def check_menu(self):
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_m] and not self.input_wait:
-            pygame.time.set_timer(self.menu_wait, 600)
-            self.input_wait = True
-            if not self.mute_flag:
-                pygame.mixer.pause()
-                self.mute_flag = True
-                if self.level:
-                    self.level.effects_channel.set_volume(0.0)
-                    self.level.player.sprite.channel.set_volume(0.0)
-            else:
-                self.mute_flag = False
-                pygame.mixer.unpause()
+                self.channel_effects.set_volume(0.2)
                 if self.level:
                     self.level.effects_channel.set_volume(0.2)
                     self.level.player.sprite.channel.set_volume(0.2)

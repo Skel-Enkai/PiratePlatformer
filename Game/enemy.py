@@ -10,10 +10,10 @@ class Enemy(pygame.sprite.Sprite):
         # attributes
         self.collide_rect = None
         self.speed = 1
-        self.previous_speed = 0
         self.health = 100
         self.knockback = False
         self.dying = False
+        self.facing_right = True
 
         self.frame_index = 0
         self.anim_speed = anim_speed
@@ -30,11 +30,22 @@ class Enemy(pygame.sprite.Sprite):
     def reverse(self):
         self.speed *= -1
 
+    def check_facing(self):
+        if self.speed > 0:
+            self.facing_right = False
+        elif self.speed < 0:
+            self.facing_right = True
+
+    def restart_move(self):
+        if self.facing_right:
+            self.speed = -1
+        else:
+            self.speed = 1
+
     def damage(self, amount):
         if not self.knockback and not self.dying:
             self.health += amount
             self.frame_index = 0
-            self.previous_speed = self.speed
             self.speed = 0
             if self.health <= 0:
                 self.frames = self.death_frames
@@ -46,6 +57,7 @@ class Enemy(pygame.sprite.Sprite):
     def update(self, x_shift):
         self.rect.x += x_shift
         self.collide_rect.centerx = self.rect.centerx
+        self.check_facing()
 
 
 class FierceTooth(Enemy):
@@ -77,8 +89,15 @@ class FierceTooth(Enemy):
         self.collide_rect.y -= 4
 
         # attack hitbox
-        self.attack_hitbox = None
         self.counter = 0
+        self.attack_masks = import_folder('./graphics/enemies/fierce_tooth/attack_mask')
+        self.attack_masks_right = []
+        self.attack_masks_left = []
+        for frame in self.attack_masks:
+            self.attack_masks_right.append(pygame.mask.from_surface(frame))
+            self.attack_masks_left.append(pygame.mask.from_surface(pygame.transform.flip(frame, True, False)))
+        self.mask = self.attack_masks_right[0]
+        self.mask.clear()
 
     def animate(self):
         self.frame_index += self.anim_speed
@@ -86,8 +105,7 @@ class FierceTooth(Enemy):
             self.frame_index = 0
             if self.knockback:
                 self.frames = self.run_frames
-                self.speed = self.previous_speed
-                self.previous_speed = 0
+                self.restart_move()
                 self.knockback = False
             elif self.dying:
                 self.kill()
@@ -98,16 +116,26 @@ class FierceTooth(Enemy):
             elif self.attack:
                 self.frames = self.run_frames
                 self.attack = False
+                self.restart_move()
         self.image = self.frames[int(self.frame_index)]
-        if self.speed > 0 or self.previous_speed > 0:
+        if not self.facing_right:
             self.image = pygame.transform.flip(self.image, True, False)
 
     def anticipate_attack(self):
-        self.anticipation = True
-        self.frames = self.anticipation_frames
+        if not self.knockback and not self.dying:
+            self.anticipation = True
+            self.frames = self.anticipation_frames
+            self.speed = 0
 
     def update_attack(self):
-        pass
+        index = int(self.frame_index)
+        if index < 3:
+            if self.facing_right:
+                self.mask = self.attack_masks_right[index]
+            else:
+                self.mask = self.attack_masks_left[index]
+        else:
+            self.mask.clear()
 
     def update(self, x_shift):
         self.counter += 1
@@ -119,4 +147,5 @@ class FierceTooth(Enemy):
         self.move()
         self.rect.x += x_shift
         self.collide_rect.centerx = self.rect.centerx
+        self.check_facing()
         self.animate()
