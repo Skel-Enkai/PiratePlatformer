@@ -2,6 +2,7 @@ import pygame.time
 
 from level import Level
 from overworld import Overworld
+from settings import controllers
 from ui import UI
 
 
@@ -79,9 +80,14 @@ class Game:
             # self.current_level 0 // uncomment for perma death
             self.create_overworld()
 
-    def check_menu(self):
+    def check_menu(self, joystick):
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_m] and not self.input_wait:
+        menu = False
+        if joystick:
+            controller = controllers[joystick.get_name()]
+            menu = joystick.get_button(controller['menu'])
+
+        if (keys[pygame.K_m] or menu) and not self.input_wait:
             pygame.time.set_timer(self.menu_wait, 600)
             self.input_wait = True
             if not self.mute_flag:
@@ -100,7 +106,7 @@ class Game:
                     self.level.player.sprite.channel.set_volume(0.2)
 
     def run(self, joystick=None):
-        self.check_menu()
+        self.check_menu(joystick)
         if self.status == 'overworld':
             self.overworld.run(joystick, self.controller)
         elif self.status == 'level':

@@ -29,6 +29,9 @@ pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.JOYDEVICEADDED, py
 
 
 async def main():
+    # debug
+    counter_1 = 0
+
     joysticks = [None]
     current_controller = 0
     while True:
@@ -49,22 +52,38 @@ async def main():
             elif event.type == game.menu_wait:
                 game.input_wait = False
 
-            elif game.level:
-                if event.type == game.level.player.sprite.attack_timer:
-                    game.level.player.sprite.can_attack = True
+            elif game.level and event.type == game.level.player.sprite.attack_timer:
+                game.level.player.sprite.can_attack = True
 
             elif event.type == pygame.JOYDEVICEADDED or event.type == pygame.JOYDEVICEREMOVED:
-                joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
+                number_joys = pygame.joystick.get_count()
+                current_controller = 0
+                if number_joys > 0:
+                    joysticks = [pygame.joystick.Joystick(x) for x in range(number_joys)]
+                else:
+                    joysticks = [None]
 
             elif event.type == pygame.JOYBUTTONDOWN:
                 game.controller = True
                 current_controller = event.joy
-                print(event)
 
         game.run(joysticks[current_controller])
 
         screen.blit(screen_surface, (0, 0))
         pygame.display.update()
+
+        # DEBUGGING
+        # if joysticks != [None]:
+        #     counter_1 += 1
+        #     if counter_1 >= 100:
+        #         counter_1 = 0
+        #         for x in range(joysticks[current_controller].get_numhats()):
+        #             print('Hat ' + str(x))
+        #             print(joysticks[current_controller].get_hat(x))
+        #
+        #         for x in range(joysticks[current_controller].get_numaxes()):
+        #             print('Axis ' + str(x))
+        #             print(joysticks[current_controller].get_axis(x))
 
         clock.tick(60)
         # fps = clock.get_fps()

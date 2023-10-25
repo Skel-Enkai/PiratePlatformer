@@ -2,6 +2,7 @@ import pygame.sprite
 
 from decoration import Sky
 from game_data import levels
+from settings import controllers
 from tiles import AnimatedTile
 
 
@@ -87,16 +88,17 @@ class Overworld:
             self.keyboard_input()
 
     def controller_input(self, joystick):
-        if joystick.get_name() == "PS5 Controller" and not self.moving and not self.wait:
-            if joystick.get_button(14) and self.current_level < self.max_level:
+        controller = controllers[joystick.get_name()]
+        if joystick.get_name() in controllers.keys() and not self.moving and not self.wait:
+            if joystick.get_button(controller['right_pad']) and self.current_level < self.max_level:
                 self.move_direction = self.get_movement_data(True)
                 self.current_level += 1
                 self.moving = True
-            elif joystick.get_button(13) and self.current_level > 0:
+            elif joystick.get_button(controller['left_pad']) and self.current_level > 0:
                 self.move_direction = self.get_movement_data(False)
                 self.current_level -= 1
                 self.moving = True
-            elif joystick.get_button(0):
+            elif joystick.get_button(controller['cross']):
                 self.create_level(self.current_level)
 
     def keyboard_input(self):

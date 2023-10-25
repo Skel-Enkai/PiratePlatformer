@@ -2,6 +2,7 @@ import math
 
 import pygame.sprite
 
+from settings import controllers
 from support import import_folder
 
 
@@ -154,20 +155,22 @@ class Player(pygame.sprite.Sprite):
                 self.stab()
 
     def joystick_input(self, joystick):
-        if joystick.get_name() == "PS5 Controller" and self.can_move:
+        controller = controllers[joystick.get_name()]
+        if joystick.get_name() in controllers.keys() and self.can_move:
             # movement
-            if joystick.get_button(14) and self.direction.x <= 3:
+            if joystick.get_button(controller['right_pad']) and self.direction.x <= 3:
                 self.direction.x += 0.2
                 self.facing_right = True
-            elif joystick.get_button(13) and self.direction.x >= -3:
+            elif joystick.get_button(controller['left_pad']) and self.direction.x >= -3:
                 self.direction.x -= 0.2
                 self.facing_right = False
             # jump
-            if (joystick.get_button(0) or joystick.get_button(11)) and self.direction.y == 0:
+            if ((joystick.get_button(controller['cross']) or joystick.get_button(controller['up_pad'])) and
+                    self.direction.y == 0):
                 self.jump = True
                 self.create_jump_particles(self.collide_rect.midbottom)
                 self.channel.play(self.jump_sound)
-            elif not (joystick.get_button(0) or joystick.get_button(11)):
+            elif not (joystick.get_button(controller['cross']) or joystick.get_button(controller['up_pad'])):
                 if self.direction.y < -4 and not self.rebound:
                     self.direction.y = -4
                     self.jump = False
@@ -175,7 +178,7 @@ class Player(pygame.sprite.Sprite):
                     self.direction.y = -6
                     self.jump = False
             # attacks
-            if joystick.get_button(2) and self.on_ground:
+            if joystick.get_button(controller['square']) and self.on_ground:
                 self.stab()
 
     def stab(self):

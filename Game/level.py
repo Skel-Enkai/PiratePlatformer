@@ -342,7 +342,7 @@ class Level:
         # debug_collide_rect.set_alpha(150)
         # self.display_surface.blit(debug_collide_rect, player.collide_rect)
 
-        # for debug hitbox
+        # for debug hitbox player attack
         # if player.attack_hitbox:
         #     hitbox = pygame.Surface((player.attack_hitbox.width, player.attack_hitbox.height))
         #     hitbox.fill(pygame.Color(255, 0, 0))
