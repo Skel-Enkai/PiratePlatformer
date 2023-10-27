@@ -2,14 +2,17 @@ import math
 
 import pygame.sprite
 
+from particles import AttackEffect
 from settings import controllers
-from support import import_folder
+from support import import_folder, import_loop, create_masks
 
 
 # noinspection PyAttributeOutsideInit
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, surface, create_jump_particles, mute):
         super().__init__()
+        self.animations = {}
+        self.sword_effects = {}
         self.import_character_assets()
         self.frame_index = 0
         self.animations_speed = 0.10
@@ -45,9 +48,13 @@ class Player(pygame.sprite.Sprite):
         self.can_attack = True
         self.attack_timer = pygame.event.custom_type()
 
-        # surfaces
+        # surfaces and masks
         self.display_surface = surface
-        self.attack_hitbox = None
+        self.attack = pygame.sprite.GroupSingle()
+        self.mask_dict = {'09-Idle Sword': '01-Idle', '10-Run Sword': '02-Run', '11-Jump Sword': '03-Jump',
+                          '12-Fall Sword': '04-Fall', '13-Ground Sword': '05-Ground', '14-Hit Sword': '06-Hit'}
+        self.mask = self.mask_animations_right[self.mask_dict[self.status]][0]
+        self.mask.clear()
 
         # audio
         self.channel = pygame.mixer.Channel(3)
@@ -59,15 +66,24 @@ class Player(pygame.sprite.Sprite):
         self.hit_sound = pygame.mixer.Sound('./audio/effects/hit.wav')
 
     def import_character_assets(self):
-        character_path = './graphics/character/Captain Clown Nose with Sword/'
-        self.animations = {'09-Idle Sword': [], '10-Run Sword': [], '11-Jump Sword': [], '12-Fall Sword': [],
-                           '14-Hit Sword': [], '15-Attack 1': []}
+        sword_effects_path = './graphics/character/Sword Effects/'
+        import_loop(sword_effects_path, self.sword_effects)
 
-        for animation in self.animations.keys():
-            full_path = character_path + animation
-            self.animations[animation] = import_folder(full_path)
-            for index, frame in enumerate(self.animations[animation]):
-                self.animations[animation][index] = pygame.transform.scale_by(frame, 2)
+        character_no_sword_path = './graphics/character/Captain Clown Nose without Sword/'
+        import_loop(character_no_sword_path, self.animations)
+
+        character_path = './graphics/character/Captain Clown Nose with Sword/'
+        import_loop(character_path, self.animations)
+
+        self.mask_sword_effects_right = {}
+        self.mask_sword_effects_left = {}
+        create_masks(self.sword_effects, self.mask_sword_effects_right, self.mask_sword_effects_left)
+
+        self.mask_animations_right = {}
+        self.mask_animations_left = {}
+        create_masks(self.animations, self.mask_animations_right, self.mask_animations_left,
+                     exclude_masks=['09-Idle Sword', '10-Run Sword', '11-Jump Sword', '12-Fall Sword',
+                                    '13-Ground Sword', '14-Hit Sword'])
 
     def import_dust_run_particles(self):
         self.dust_run_particles = import_folder("./graphics/character/dust_particles/run")
@@ -79,12 +95,17 @@ class Player(pygame.sprite.Sprite):
             self.frame_index = 0
             self.reset_status()
             animation = self.animations[self.status]
-        image = animation[int(self.frame_index)]
-        if self.facing_right:
-            self.image = image
+        index = int(self.frame_index)
+        self.image = animation[index]
+        try:
+            key = self.mask_dict[self.status]
+        except KeyError:
+            key = self.status
+        if not self.facing_right:
+            self.image = pygame.transform.flip(self.image, True, False)
+            self.mask = self.mask_animations_left[key][index]
         else:
-            flipped_image = pygame.transform.flip(image, True, False)
-            self.image = flipped_image
+            self.mask = self.mask_animations_right[key][index]
 
     def reset_status(self):
         if not self.should_reset_status():
@@ -188,23 +209,11 @@ class Player(pygame.sprite.Sprite):
             self.frame_index = 0
             self.animations_speed = 0.10
             pygame.time.set_timer(self.attack_timer, 1000)
-            self.attack_hitbox = pygame.Rect
-
-    # update to function that can take multiple attack types
-    def update_hitbox_stab(self):
-        height, width, offset = 28, 40, 15
-        if int(self.frame_index) == 1:
-            width = 70
-        if int(self.frame_index) == 2:
-            width, offset = 30, 60
-        self.attack_hitbox = pygame.Rect(self.rect.midbottom, (width, height))
-        self.attack_hitbox.x += offset
-        self.attack_hitbox.y -= (height + 1)
-        if not self.facing_right:
-            self.attack_hitbox.x -= (width + (offset * 2))
-
-        if self.status != '15-Attack 1':
-            self.attack_hitbox = None
+            self.attack.add(AttackEffect(self, self.sword_effects['24-Attack 1'], should_flip=not self.facing_right,
+                                         facing=self.facing_right,
+                                         right_mask=self.mask_sword_effects_right['24-Attack 1'],
+                                         left_mask=self.mask_sword_effects_left['24-Attack 1'],
+                                         offset=pygame.Vector2(70, 0)))
 
     def get_status(self):
         if self.should_reset_status():
@@ -269,11 +278,12 @@ class Player(pygame.sprite.Sprite):
         self.collide_rect.x += force
         self.direction.y = -1 * abs(force)
 
-    def update(self, joystick, controller):
+    def update(self, joystick, controller, world_shift):
         self.control_player(joystick, controller)
         self.reset_x()
         self.get_status()
-        if self.attack_hitbox:
-            self.update_hitbox_stab()
+        if self.attack:
+            self.attack.update()
+            self.attack.draw(self.display_surface)
         self.animate()
         self.dust_animate()

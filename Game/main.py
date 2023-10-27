@@ -31,7 +31,6 @@ pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.JOYDEVICEADDED, py
 async def main():
     # debug
     counter_1 = 0
-
     joysticks = [None]
     current_controller = 0
     while True:

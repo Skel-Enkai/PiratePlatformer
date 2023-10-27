@@ -20,6 +20,28 @@ def import_folder(path):
     return surfaces
 
 
+def import_loop(path, dict):
+    for _, dir, ___ in walk(path):
+        for folder in dir:
+            full_path = path + folder
+            dict[folder] = import_folder(full_path)
+            for index, frame in enumerate(dict[folder]):
+                dict[folder][index] = pygame.transform.scale_by(frame, 2)
+
+
+def create_masks(animation_dict, mask_dict_right, mask_dict_left, exclude_masks=None):
+    if exclude_masks is None:
+        exclude_masks = [None]
+    for animation in animation_dict.keys():
+        if animation not in exclude_masks:
+            mask_dict_right[animation] = []
+            mask_dict_left[animation] = []
+            for frame in animation_dict[animation]:
+                mask_dict_right[animation].append(pygame.mask.from_surface(frame))
+                mask_dict_left[animation].append(pygame.mask.from_surface(pygame.transform.flip(
+                    frame, True, False)))
+
+
 def import_csv_layout(path):
     terrain_map = []
     with open(path) as map:

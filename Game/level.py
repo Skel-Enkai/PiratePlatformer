@@ -74,7 +74,7 @@ class Level:
 
         # enemies
         enemy_layout = import_csv_layout(level_data['enemies'])
-        self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
+        self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies', self.display_surface)
 
         # constraint
         constraint_layout = import_csv_layout(level_data['constraints'])
@@ -90,7 +90,7 @@ class Level:
         self.player_on_ground = True
 
     @staticmethod
-    def create_tile_group(layout, type):
+    def create_tile_group(layout, type, display_surface=None):
         sprite_group = pygame.sprite.Group()
 
         for row_index, row in enumerate(layout):
@@ -136,7 +136,7 @@ class Level:
                         sprite = Palm(tile_size, x, y, './graphics/terrain/palm_bg', 64)
 
                     elif type == 'enemies':
-                        sprite = FierceTooth(tile_size, x, y)
+                        sprite = FierceTooth(tile_size, x, y, display_surface)
 
                     elif type == 'constraint':
                         sprite = Tile(tile_size, x, y)
@@ -260,7 +260,7 @@ class Level:
     def enemy_collision_reverse(self):
         for enemy in self.enemy_sprites.sprites():
             if pygame.sprite.spritecollide(enemy, self.constraint_sprites, False,
-                                           collided=pygame.sprite.collide_rect_ratio(0.5)):
+                                           collided=pygame.sprite.collide_rect_ratio(0.7)):
                 enemy.rect.x -= enemy.speed
                 enemy.reverse()
 
@@ -272,6 +272,7 @@ class Level:
         if self.goal.sprite.rect.colliderect(self.player.sprite.collide_rect):
             self.create_overworld(self.new_max_level)
 
+    # add generate masks on load
     def check_coin_collisions(self):
         player = self.player.sprite
         collided_coins = pygame.sprite.spritecollide(player, self.coin_sprites, True, pygame.sprite.collide_mask)
@@ -302,9 +303,16 @@ class Level:
 
     @staticmethod
     def check_player_attack_hits(player, enemy):
-        if player.attack_hitbox:
-            if player.attack_hitbox.colliderect(enemy.collide_rect):
+        if player.attack.sprite is not None:
+            if pygame.sprite.collide_mask(player.attack.sprite, enemy):
                 enemy.damage(-45)
+
+    def check_enemy_attack_hits(self, enemy, player):
+        if enemy.attack_effects.sprite is not None:
+            if pygame.sprite.collide_mask(player, enemy.attack_effects.sprite):
+                # add more flair to this interaction
+                self.change_cur_health(-30)
+                player.knockback_init()
 
     def check_enemy_collisions(self, joystick):
         player = self.player.sprite
@@ -314,10 +322,7 @@ class Level:
                     self.player_enemy_collision(player, enemy, joystick)
                 elif not enemy.knockback and not player.knockback:
                     self.check_player_attack_hits(player, enemy)
-                    if enemy.attack and pygame.sprite.collide_mask(player, enemy):
-                        # add more flair to this interaction
-                        self.change_cur_health(-30)
-                        player.knockback_init()
+                    self.check_enemy_attack_hits(enemy, player)
 
     def draw(self):
         self.sky.draw(self.display_surface)
@@ -336,24 +341,23 @@ class Level:
         self.water.draw(self.display_surface, self.world_shift)
 
         # DEBUGGING
-        player = self.player.sprite
+        # player = self.player.sprite
+        # self.display_surface.blit(player.mask.to_surface(unsetcolor=None, setcolor='Red'), player.rect)
         # debug_collide_rect = pygame.Surface((player.collide_rect.width, player.collide_rect.height))
         # debug_collide_rect.fill(pygame.Color(255, 0, 0))
         # debug_collide_rect.set_alpha(150)
         # self.display_surface.blit(debug_collide_rect, player.collide_rect)
-
-        # for debug hitbox player attack
-        # if player.attack_hitbox:
-        #     hitbox = pygame.Surface((player.attack_hitbox.width, player.attack_hitbox.height))
-        #     hitbox.fill(pygame.Color(255, 0, 0))
-        #     hitbox.set_alpha(150)
-        #     self.display_surface.blit(hitbox, player.attack_hitbox)
 
         # pygame.draw.rect(self.display_surface, 'red', self.player.sprite.rect)
         # pygame.draw.rect(self.display_surface, 'red', player.collide_rect)
         # for enemy in self.enemy_sprites:
         #     self.display_surface.blit(enemy.mask.to_surface(unsetcolor=None, setcolor='Red'), enemy.rect)
         #     pygame.draw.rect(self.display_surface, 'red', enemy.collide_rect)
+
+        # attack effects debug
+        # if player.status == '15-Attack 1':
+        #     self.display_surface.blit(player.attack.sprite.mask.to_surface(unsetcolor=None, setcolor='Red'),
+        #                               player.attack.sprite.rect)
 
     def update(self, joystick, controller):
         self.scroll_x()
@@ -370,7 +374,7 @@ class Level:
         self.goal.update(self.world_shift)
         self.dust_sprite.update(self.world_shift)
         # player and movement
-        self.player.update(joystick, controller)
+        self.player.update(joystick, controller, self.world_shift)
         self.horizontal_movement_collision()
         self.vertical_movement_collision()
         self.player.sprite.rect.center = self.player.sprite.collide_rect.center
