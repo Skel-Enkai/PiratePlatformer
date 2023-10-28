@@ -115,10 +115,28 @@ class Player(pygame.sprite.Sprite):
 
     def should_reset_status(self):
         should_reset = ['14-Hit Sword', '15-Attack 1']
-        for anim in should_reset:
-            if self.status == anim:
-                return False
+        if self.status in should_reset:
+            return False
         return True
+
+    def get_status(self):
+        if self.should_reset_status():
+            current = self.status
+            self.animations_speed = 0.10
+            if self.direction.y < 0:
+                self.status = '11-Jump Sword'
+            elif self.direction.y > 1:
+                self.status = '12-Fall Sword'
+                self.rebound = False
+            else:
+                if self.direction.x == 0:
+                    self.status = '09-Idle Sword'
+                else:
+                    self.status = '10-Run Sword'
+                    self.animations_speed = 0.15
+            if self.status != current:
+                self.frame_index = 0
+                self.can_move = True
 
     def knockback_init(self):
         self.frame_index = 0
@@ -213,26 +231,7 @@ class Player(pygame.sprite.Sprite):
                                          facing=self.facing_right,
                                          right_mask=self.mask_sword_effects_right['24-Attack 1'],
                                          left_mask=self.mask_sword_effects_left['24-Attack 1'],
-                                         offset=pygame.Vector2(70, 0)))
-
-    def get_status(self):
-        if self.should_reset_status():
-            current = self.status
-            self.animations_speed = 0.10
-            if self.direction.y < 0:
-                self.status = '11-Jump Sword'
-            elif self.direction.y > 1:
-                self.status = '12-Fall Sword'
-                self.rebound = False
-            else:
-                if self.direction.x == 0:
-                    self.status = '09-Idle Sword'
-                else:
-                    self.status = '10-Run Sword'
-                    self.animations_speed = 0.15
-            if self.status != current:
-                self.frame_index = 0
-                self.can_move = True
+                                         offset=pygame.Vector2(62, 0)))
 
     def apply_gravity(self):
         if self.jump:

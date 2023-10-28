@@ -74,7 +74,7 @@ class Level:
 
         # enemies
         enemy_layout = import_csv_layout(level_data['enemies'])
-        self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies', self.display_surface)
+        self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
 
         # constraint
         constraint_layout = import_csv_layout(level_data['constraints'])
@@ -89,8 +89,7 @@ class Level:
         self.dust_sprite = pygame.sprite.GroupSingle()
         self.player_on_ground = True
 
-    @staticmethod
-    def create_tile_group(layout, type, display_surface=None):
+    def create_tile_group(self, layout, type):
         sprite_group = pygame.sprite.Group()
 
         for row_index, row in enumerate(layout):
@@ -136,7 +135,7 @@ class Level:
                         sprite = Palm(tile_size, x, y, './graphics/terrain/palm_bg', 64)
 
                     elif type == 'enemies':
-                        sprite = FierceTooth(tile_size, x, y, display_surface)
+                        sprite = FierceTooth(x, y, self.display_surface, self.player)
 
                     elif type == 'constraint':
                         sprite = Tile(tile_size, x, y)
@@ -257,12 +256,12 @@ class Level:
         if player.on_ceiling and player.direction.y > 0 or player.direction.y < 1:
             player.on_ceiling = False
 
-    def enemy_collision_reverse(self):
-        for enemy in self.enemy_sprites.sprites():
-            if pygame.sprite.spritecollide(enemy, self.constraint_sprites, False,
-                                           collided=pygame.sprite.collide_rect_ratio(0.7)):
-                enemy.rect.x -= enemy.speed
-                enemy.reverse()
+    def enemy_collision_boundry(self):
+        collisions = pygame.sprite.groupcollide(self.enemy_sprites, self.constraint_sprites, False, False,
+                                                collided=pygame.sprite.collide_rect_ratio(0.8))
+        for enemy in collisions.keys():
+            enemy.constraints = collisions[enemy]
+            enemy.boundry = True
 
     def check_death(self):
         if self.player.sprite.collide_rect.top > screen_height + 400:
@@ -308,8 +307,8 @@ class Level:
                 enemy.damage(-45)
 
     def check_enemy_attack_hits(self, enemy, player):
-        if enemy.attack_effects.sprite is not None:
-            if pygame.sprite.collide_mask(player, enemy.attack_effects.sprite):
+        if enemy.attack_effect.sprite is not None:
+            if pygame.sprite.collide_mask(player, enemy.attack_effect.sprite):
                 # add more flair to this interaction
                 self.change_cur_health(-30)
                 player.knockback_init()
@@ -320,8 +319,9 @@ class Level:
             if not enemy.dying:
                 if pygame.Rect.colliderect(enemy.collide_rect, player.collide_rect):
                     self.player_enemy_collision(player, enemy, joystick)
-                elif not enemy.knockback and not player.knockback:
+                if not enemy.knockback:
                     self.check_player_attack_hits(player, enemy)
+                if not player.knockback:
                     self.check_enemy_attack_hits(enemy, player)
 
     def draw(self):
@@ -341,6 +341,8 @@ class Level:
         self.water.draw(self.display_surface, self.world_shift)
 
         # DEBUGGING
+
+        # collide_rects debug
         # player = self.player.sprite
         # self.display_surface.blit(player.mask.to_surface(unsetcolor=None, setcolor='Red'), player.rect)
         # debug_collide_rect = pygame.Surface((player.collide_rect.width, player.collide_rect.height))
@@ -355,9 +357,14 @@ class Level:
         #     pygame.draw.rect(self.display_surface, 'red', enemy.collide_rect)
 
         # attack effects debug
+        # player = self.player.sprite
         # if player.status == '15-Attack 1':
         #     self.display_surface.blit(player.attack.sprite.mask.to_surface(unsetcolor=None, setcolor='Red'),
         #                               player.attack.sprite.rect)
+        # for enemy in self.enemy_sprites:
+        #     if enemy.status == '07-Attack' and enemy.attack_effect.sprite is not None:
+        #         self.display_surface.blit(enemy.attack_effect.sprite.mask.to_surface(unsetcolor=None, setcolor='Red'),
+        #                                   enemy.attack_effect.sprite.rect)
 
     def update(self, joystick, controller):
         self.scroll_x()
@@ -369,7 +376,7 @@ class Level:
         self.coin_sprites.update(self.world_shift)
         self.constraint_sprites.update(self.world_shift)
         self.enemy_sprites.update(self.world_shift)
-        self.enemy_collision_reverse()
+        self.enemy_collision_boundry()
         self.fg_palm_sprites.update(self.world_shift)
         self.goal.update(self.world_shift)
         self.dust_sprite.update(self.world_shift)
