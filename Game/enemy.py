@@ -6,7 +6,7 @@ from support import import_loop, create_masks
 
 # noinspection PyAttributeOutsideInit
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, path, anim_speed=0.10):
+    def __init__(self, path, identifier, anim_speed=0.10):
         super().__init__()
         # attributes
         self.speed = 1
@@ -22,6 +22,7 @@ class Enemy(pygame.sprite.Sprite):
         self.facing_right = False
         self.status = None
         self.should_reset = []
+        self.identifier = identifier
 
         # empty attributes
         self.rect = None
@@ -69,12 +70,11 @@ class Enemy(pygame.sprite.Sprite):
 
 # noinspection PyAttributeOutsideInit
 class FierceTooth(Enemy):
-    def __init__(self, x, y, display_surface, player):
-        super().__init__('./graphics/enemies/fierce_tooth/', anim_speed=0.10)
+    def __init__(self, x, y, display_surface, player, identifier):
+        super().__init__('./graphics/enemies/fierce_tooth/', identifier, anim_speed=0.10)
         # flags and essentials
         self.status = '01-Idle'
         self.should_reset = ['06-Anticipation', '07-Attack', '08-Hit', '09-Dead Hit', '10-Dead Ground']
-        self.boundry = False
         self.display_surface = display_surface
         self.constraints = []
         self.player = player
@@ -136,7 +136,7 @@ class FierceTooth(Enemy):
         if self.speed > 0:
             rect_xdifference = self.rect.centerx - self.player.sprite.rect.centerx
             rect_ydifference = self.rect.centery - self.player.sprite.rect.centery
-            if abs(rect_ydifference) <= 100:
+            if abs(rect_ydifference) <= 60:
                 if abs(rect_xdifference) >= 300:
                     self.direction.x = 0
                 elif abs(rect_xdifference) <= 90 and ((self.facing_right and rect_xdifference < 0) or
@@ -150,8 +150,7 @@ class FierceTooth(Enemy):
                 self.direction.x = 0
 
     def boundry_detection(self):
-        if self.boundry:
-            self.boundry = False
+        if self.constraints is not []:
             for constraint in self.constraints:
                 if self.collide_rect.centerx <= constraint.rect.centerx:
                     if self.direction.x > 0:

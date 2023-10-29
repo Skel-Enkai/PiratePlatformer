@@ -91,6 +91,7 @@ class Level:
 
     def create_tile_group(self, layout, type):
         sprite_group = pygame.sprite.Group()
+        identifier = 0
 
         for row_index, row in enumerate(layout):
             y = tile_size * row_index
@@ -135,7 +136,8 @@ class Level:
                         sprite = Palm(tile_size, x, y, './graphics/terrain/palm_bg', 64)
 
                     elif type == 'enemies':
-                        sprite = FierceTooth(x, y, self.display_surface, self.player)
+                        sprite = FierceTooth(x, y, self.display_surface, self.player, identifier)
+                        identifier += 1
 
                     elif type == 'constraint':
                         sprite = Tile(tile_size, x, y)
@@ -257,11 +259,20 @@ class Level:
             player.on_ceiling = False
 
     def enemy_collision_boundry(self):
+        for enemy in self.enemy_sprites:
+            enemy.constraints = []
+
         collisions = pygame.sprite.groupcollide(self.enemy_sprites, self.constraint_sprites, False, False,
                                                 collided=pygame.sprite.collide_rect_ratio(0.8))
         for enemy in collisions.keys():
-            enemy.constraints = collisions[enemy]
-            enemy.boundry = True
+            enemy.constraints += collisions[enemy]
+
+        collisions_self = pygame.sprite.groupcollide(self.enemy_sprites, self.enemy_sprites, False, False)
+
+        for enemy in collisions_self.keys():
+            for collided in collisions_self[enemy]:
+                if collided.identifier != enemy.identifier:
+                    enemy.constraints.append(collided)
 
     def check_death(self):
         if self.player.sprite.collide_rect.top > screen_height + 400:
