@@ -2,12 +2,14 @@ import pygame.time
 
 from level import Level
 from overworld import Overworld
+from settings import controllers
 from ui import UI
 
 
 class Game:
     def __init__(self, surface):
         # game attributes
+        self.input_wait = False
         self.level = None
         self.current_level = 0
         self.max_level = 5
@@ -34,6 +36,9 @@ class Game:
         self.channel_effects.set_volume(0.3)
         self.hit_sound = pygame.mixer.Sound('./audio/effects/hit.wav')
 
+        self.mute_flag = False
+        self.menu_wait = pygame.event.custom_type()
+
         # overworld creation
         self.overworld = Overworld(self.screen_surface, self.create_level, 0, self.max_level)
         self.status = 'overworld'
@@ -44,17 +49,21 @@ class Game:
     def create_level(self, current_level):
         self.current_level = current_level
         self.level = Level(current_level, self.screen_surface, self.create_overworld,
-                           self.change_coins, self.change_cur_health)
+                           self.change_coins, self.change_cur_health, self.mute_flag)
         self.status = 'level'
         self.music.play(self.level_music, loops=-1)
+        if self.mute_flag:
+            pygame.mixer.pause()
 
-    def create_overworld(self, new_max_level):
+    def create_overworld(self, new_max_level=0):
         if new_max_level > self.max_level:
             self.max_level = new_max_level
         self.overworld = Overworld(self.screen_surface, self.create_level, self.current_level, self.max_level)
         self.status = 'overworld'
         pygame.time.set_timer(self.switch_overworld, 1200)
         self.music.play(self.overworld_music, loops=-1)
+        if self.mute_flag:
+            pygame.mixer.pause()
 
     def change_coins(self, amount):
         self.coins += amount
@@ -69,11 +78,35 @@ class Game:
             self.coins = 0
             # self.max_level = 0 // uncomment for perma death
             # self.current_level 0 // uncomment for perma death
-            self.overworld = Overworld(self.screen_surface, self.create_level, self.current_level, self.max_level)
-            self.status = 'overworld'
-            self.music.play(self.overworld_music, loops=-1)
+            self.create_overworld()
+
+    def check_menu(self, joystick):
+        keys = pygame.key.get_pressed()
+        menu = False
+        if joystick:
+            controller = controllers[joystick.get_name()]
+            menu = joystick.get_button(controller['menu'])
+
+        if (keys[pygame.K_m] or menu) and not self.input_wait:
+            pygame.time.set_timer(self.menu_wait, 600)
+            self.input_wait = True
+            if not self.mute_flag:
+                pygame.mixer.pause()
+                self.mute_flag = True
+                self.channel_effects.set_volume(0.0)
+                if self.level:
+                    self.level.effects_channel.set_volume(0.0)
+                    self.level.player.sprite.channel.set_volume(0.0)
+            else:
+                self.mute_flag = False
+                pygame.mixer.unpause()
+                self.channel_effects.set_volume(0.2)
+                if self.level:
+                    self.level.effects_channel.set_volume(0.2)
+                    self.level.player.sprite.channel.set_volume(0.2)
 
     def run(self, joystick=None):
+        self.check_menu(joystick)
         if self.status == 'overworld':
             self.overworld.run(joystick, self.controller)
         elif self.status == 'level':
