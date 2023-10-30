@@ -3,6 +3,7 @@ import pygame.time
 from level import Level
 from overworld import Overworld
 from settings import controllers
+from support import find_files
 from ui import UI
 
 
@@ -29,12 +30,12 @@ class Game:
         # audio
         self.music = pygame.mixer.Channel(0)
         self.music.set_volume(0.1)
-        self.overworld_music = pygame.mixer.Sound('./audio/overworld_music.wav')
-        self.level_music = pygame.mixer.Sound('./audio/level_music.wav')
+        self.overworld_music = pygame.mixer.Sound(find_files('./audio/overworld_music.wav'))
+        self.level_music = pygame.mixer.Sound(find_files('./audio/level_music.wav'))
 
         self.channel_effects = pygame.mixer.Channel(1)
         self.channel_effects.set_volume(0.3)
-        self.hit_sound = pygame.mixer.Sound('./audio/effects/hit.wav')
+        self.hit_sound = pygame.mixer.Sound(find_files('./audio/effects/hit.wav'))
 
         self.mute_flag = False
         self.menu_wait = pygame.event.custom_type()

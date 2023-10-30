@@ -32,8 +32,8 @@ class Level:
             self.effects_channel.set_volume(0.0)
         else:
             self.effects_channel.set_volume(0.2)
-        self.coin_sound = pygame.mixer.Sound('./audio/effects/coin.wav')
-        self.stomp_sound = pygame.mixer.Sound('./audio/effects/stomp.wav')
+        self.coin_sound = pygame.mixer.Sound(find_files('./audio/effects/coin.wav'))
+        self.stomp_sound = pygame.mixer.Sound(find_files('./audio/effects/stomp.wav'))
 
         # player
         player_layout = import_csv_layout(level_data['player'])
@@ -46,39 +46,20 @@ class Level:
         self.change_coins = change_coins
         self.change_cur_health = change_cur_health
 
-        # terrain setup
-        terrain_layout = import_csv_layout(level_data['terrain'])
-        self.world_length = len(terrain_layout[0]) * tile_size
-        self.terrain_sprites = self.create_tile_group(terrain_layout, 'terrain')
-        self.terrain_collidable = self.create_tile_group(terrain_layout, 'terrain_collidable')
+        # level dict
+        self.level_sprites = {'terrain': pygame.sprite.Group(), 'terrain_collidable': pygame.sprite.Group(),
+                              'grass': pygame.sprite.Group(), 'crates': pygame.sprite.Group(),
+                              'coins': pygame.sprite.Group(), 'fg palms': pygame.sprite.Group(),
+                              'bg palms': pygame.sprite.Group(), 'enemies': pygame.sprite.Group(),
+                              'constraints': pygame.sprite.Group()}
 
-        # grass setup
-        grass_layout = import_csv_layout(level_data['grass'])
-        self.grass_sprites = self.create_tile_group(grass_layout, 'grass')
-
-        # crates
-        crate_layout = import_csv_layout(level_data['crates'])
-        self.crate_sprites = self.create_tile_group(crate_layout, 'crates')
-
-        # coins
-        coin_layout = import_csv_layout(level_data['coins'])
-        self.coin_sprites = self.create_tile_group(coin_layout, 'coins')
-
-        # foreground palms
-        fg_palm_layout = import_csv_layout(level_data['fg palms'])
-        self.fg_palm_sprites = self.create_tile_group(fg_palm_layout, 'fg palms')
-
-        # background palms
-        bg_palm_layout = import_csv_layout(level_data['bg palms'])
-        self.bg_palm_sprites = self.create_tile_group(bg_palm_layout, 'bg palms')
-
-        # enemies
-        enemy_layout = import_csv_layout(level_data['enemies'])
-        self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
-
-        # constraint
-        constraint_layout = import_csv_layout(level_data['constraints'])
-        self.constraint_sprites = self.create_tile_group(constraint_layout, 'constraint')
+        for key in level_data.keys():
+            if key not in ('node_pos', 'unlock', 'node_graphics', 'player'):
+                layout = import_csv_layout(level_data[key])
+                self.level_sprites[key] = self.create_tile_group(layout, key)
+                if key == 'terrain':
+                    self.world_length = len(layout[0]) * tile_size
+                    self.level_sprites['terrain_collidable'] = self.create_tile_group(layout, 'terrain_collidable')
 
         # decoration
         self.sky = Sky(7)
@@ -139,7 +120,7 @@ class Level:
                         sprite = FierceTooth(x, y, self.display_surface, self.player, identifier)
                         identifier += 1
 
-                    elif type == 'constraint':
+                    elif type == 'constraints':
                         sprite = Tile(tile_size, x, y)
 
                     sprite_group.add(sprite)
@@ -155,7 +136,7 @@ class Level:
                     sprite = Player((x, y), self.display_surface, self.create_jump_particles, mute)
                     self.player.add(sprite)
                 elif val == '1':
-                    hat_surface = pygame.image.load('./graphics/character/hat.png').convert_alpha()
+                    hat_surface = pygame.image.load(find_files('./graphics/character/hat.png')).convert_alpha()
                     sprite = StaticTile(tile_size, x, y + 38, hat_surface)
                     self.goal.add(sprite)
 
@@ -205,7 +186,7 @@ class Level:
             player.collide_rect.x += round(player.direction.x * player.speed)
             # print(round(player.direction.x * player.speed))
 
-        for sprite in self.crate_sprites.sprites():
+        for sprite in self.level_sprites['crates'].sprites():
             if sprite.hitbox_rect.colliderect(player.collide_rect):
                 if player.direction.x < 0:
                     player.collide_rect.left = sprite.hitbox_rect.right
@@ -226,7 +207,7 @@ class Level:
         player.apply_gravity()
         self.get_player_on_ground()
 
-        for sprite in self.crate_sprites.sprites():
+        for sprite in self.level_sprites['crates'].sprites():
             if sprite.hitbox_rect.colliderect(player.collide_rect):
                 if player.direction.y < 0:
                     player.collide_rect.top = sprite.hitbox_rect.bottom
@@ -237,14 +218,14 @@ class Level:
                     player.direction.y = 0
                     player.on_ground = True
 
-        for sprite in self.terrain_collidable.sprites():
+        for sprite in self.level_sprites['terrain_collidable'].sprites():
             if sprite.rect.inflate(-18, 0).colliderect(player.collide_rect):
                 if player.direction.y > 0.4 and player.collide_rect.bottom <= sprite.rect.top + 10 + player.direction.y:
                     player.collide_rect.bottom = sprite.rect.top
                     player.direction.y = 0
                     player.on_ground = True
 
-        for sprite in self.fg_palm_sprites.sprites():
+        for sprite in self.level_sprites['fg palms'].sprites():
             if sprite.rect.inflate(-22, 0).move(10, 0).colliderect(player.collide_rect):
                 if player.direction.y > 0.4 and player.collide_rect.bottom <= sprite.rect.top + 10 + player.direction.y:
                     player.collide_rect.bottom = sprite.rect.top
@@ -259,15 +240,17 @@ class Level:
             player.on_ceiling = False
 
     def enemy_collision_boundry(self):
-        for enemy in self.enemy_sprites:
+        enemy_sprites = self.level_sprites['enemies']
+        constraint_sprites = self.level_sprites['constraints']
+        for enemy in enemy_sprites:
             enemy.constraints = []
 
-        collisions = pygame.sprite.groupcollide(self.enemy_sprites, self.constraint_sprites, False, False,
+        collisions = pygame.sprite.groupcollide(enemy_sprites, constraint_sprites, False, False,
                                                 collided=pygame.sprite.collide_rect_ratio(0.8))
         for enemy in collisions.keys():
             enemy.constraints += collisions[enemy]
 
-        collisions_self = pygame.sprite.groupcollide(self.enemy_sprites, self.enemy_sprites, False, False)
+        collisions_self = pygame.sprite.groupcollide(enemy_sprites, enemy_sprites, False, False)
 
         for enemy in collisions_self.keys():
             for collided in collisions_self[enemy]:
@@ -285,7 +268,8 @@ class Level:
     # add generate masks on load
     def check_coin_collisions(self):
         player = self.player.sprite
-        collided_coins = pygame.sprite.spritecollide(player, self.coin_sprites, True, pygame.sprite.collide_mask)
+        collided_coins = pygame.sprite.spritecollide(player, self.level_sprites['coins'], True,
+                                                     pygame.sprite.collide_mask)
         if collided_coins:
             self.effects_channel.play(self.coin_sound)
             for coin in collided_coins:
@@ -326,7 +310,7 @@ class Level:
 
     def check_enemy_collisions(self, joystick):
         player = self.player.sprite
-        for enemy in self.enemy_sprites:
+        for enemy in self.level_sprites['enemies']:
             if not enemy.dying:
                 if pygame.Rect.colliderect(enemy.collide_rect, player.collide_rect):
                     self.player_enemy_collision(player, enemy, joystick)
@@ -338,15 +322,15 @@ class Level:
     def draw(self):
         self.sky.draw(self.display_surface)
         self.cloud.draw(self.display_surface, self.world_shift)
-        self.bg_palm_sprites.draw(self.display_surface)
-        self.terrain_sprites.draw(self.display_surface)
-        self.grass_sprites.draw(self.display_surface)
-        self.crate_sprites.draw(self.display_surface)
-        self.coin_sprites.draw(self.display_surface)
-        self.enemy_sprites.draw(self.display_surface)
+        self.level_sprites['bg palms'].draw(self.display_surface)
+        self.level_sprites['terrain'].draw(self.display_surface)
+        self.level_sprites['grass'].draw(self.display_surface)
+        self.level_sprites['crates'].draw(self.display_surface)
+        self.level_sprites['coins'].draw(self.display_surface)
+        self.level_sprites['enemies'].draw(self.display_surface)
         self.dust_sprite.draw(self.display_surface)
         self.player.draw(self.display_surface)
-        self.fg_palm_sprites.draw(self.display_surface)
+        self.level_sprites['fg palms'].draw(self.display_surface)
         self.goal.draw(self.display_surface)
         # updates and draws together, could split for threading
         self.water.draw(self.display_surface, self.world_shift)
@@ -379,16 +363,16 @@ class Level:
 
     def update(self, joystick, controller):
         self.scroll_x()
-        self.bg_palm_sprites.update(self.world_shift)
-        self.terrain_sprites.update(self.world_shift)
-        self.terrain_collidable.update(self.world_shift)
-        self.grass_sprites.update(self.world_shift)
-        self.crate_sprites.update(self.world_shift)
-        self.coin_sprites.update(self.world_shift)
-        self.constraint_sprites.update(self.world_shift)
-        self.enemy_sprites.update(self.world_shift)
+        self.level_sprites['bg palms'].update(self.world_shift)
+        self.level_sprites['terrain'].update(self.world_shift)
+        self.level_sprites['terrain_collidable'].update(self.world_shift)
+        self.level_sprites['grass'].update(self.world_shift)
+        self.level_sprites['crates'].update(self.world_shift)
+        self.level_sprites['coins'].update(self.world_shift)
+        self.level_sprites['constraints'].update(self.world_shift)
+        self.level_sprites['enemies'].update(self.world_shift)
         self.enemy_collision_boundry()
-        self.fg_palm_sprites.update(self.world_shift)
+        self.level_sprites['fg palms'].update(self.world_shift)
         self.goal.update(self.world_shift)
         self.dust_sprite.update(self.world_shift)
         # player and movement

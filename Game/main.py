@@ -5,6 +5,7 @@ import pygame
 
 from game import Game
 from settings import *
+from support import find_files
 
 # initialise only needed
 pygame.font.init()
@@ -18,7 +19,7 @@ screen_surface = pygame.Surface((screen_width, screen_height))
 
 # sets title as well as loads icon
 pygame.display.set_caption("Treasure Hunters", "Treasure Hunters")
-pygame_icon = pygame.image.load("./graphics/ui/icon.png")
+pygame_icon = pygame.image.load(find_files("./graphics/ui/icon.png"))
 pygame.display.set_icon(pygame_icon)
 
 # pygame setup

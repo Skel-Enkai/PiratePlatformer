@@ -3,15 +3,15 @@ from random import choice, randint
 import pygame.sprite
 
 from settings import *
-from support import import_folder
+from support import import_folder, find_files
 from tiles import AnimatedTile, StaticTile
 
 
 class Sky:
     def __init__(self, horizon, style='level'):
-        self.top = pygame.image.load('./graphics/decoration/sky/sky_top.png').convert()
-        self.bottom = pygame.image.load('./graphics/decoration/sky/sky_bottom.png').convert()
-        self.middle = pygame.image.load('./graphics/decoration/sky/sky_middle.png').convert()
+        self.top = pygame.image.load(find_files('./graphics/decoration/sky/sky_top.png')).convert()
+        self.bottom = pygame.image.load(find_files('./graphics/decoration/sky/sky_bottom.png')).convert()
+        self.middle = pygame.image.load(find_files('./graphics/decoration/sky/sky_middle.png')).convert()
         self.horizon = horizon
 
         # stretch
@@ -40,7 +40,7 @@ class Sky:
                 self.clouds.append((surface, rect))
 
     def draw(self, surface):
-        for row in range(vertical_tile_number):
+        for row in range(vertical_tiles_on_screen):
             y = row * tile_size
             if row < self.horizon:
                 surface.blit(self.top, (0, y))

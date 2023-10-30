@@ -1,6 +1,6 @@
 import pygame.sprite
 
-from support import import_folder
+from support import import_folder, find_files
 
 
 class Tile(pygame.sprite.Sprite):
@@ -22,7 +22,7 @@ class StaticTile(Tile):
 
 class Crate(StaticTile):
     def __init__(self, size, x, y):
-        super().__init__(size, x, y, pygame.image.load('./graphics/terrain/crate.png').convert_alpha())
+        super().__init__(size, x, y, pygame.image.load(find_files('./graphics/terrain/crate.png')).convert_alpha())
         offset_y = y + size
         self.rect = self.image.get_rect(bottomleft=(x, offset_y))
         self.hitbox_rect = self.rect.inflate(-20, 0)

@@ -1,17 +1,19 @@
 import pygame.surface
 
+from support import find_files
+
 
 class UI:
     def __init__(self, surface):
         # setup
         self.display_surface = surface
         # health
-        self.health_bar = pygame.image.load('./graphics/ui/health_bar.png')
+        self.health_bar = pygame.image.load(find_files('./graphics/ui/health_bar.png'))
         self.health_bar_width = self.health_bar.get_width() - 40
         # coins
-        self.coin = pygame.image.load('./graphics/ui/coin.png')
+        self.coin = pygame.image.load(find_files('./graphics/ui/coin.png'))
         self.coin_rect = self.coin.get_rect(topleft=(50, 61))
-        self.font = pygame.font.Font('./graphics/ui/ARCADEPI.TTF', 24)
+        self.font = pygame.font.Font(find_files('./graphics/ui/ARCADEPI.TTF'), 24)
 
     def show_health(self, current, full):
         current_health_ratio = current / full

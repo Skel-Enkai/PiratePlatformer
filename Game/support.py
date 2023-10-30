@@ -1,3 +1,5 @@
+import os
+import sys
 from csv import reader
 from os import walk
 
@@ -6,21 +8,38 @@ import pygame.surface
 from settings import tile_size
 
 
+# noinspection PyProtectedMember
+def find_files(path):
+    if getattr(sys, 'frozen', False):
+        wd = sys._MEIPASS
+        new_path = ''
+        for element in path:
+            if element == '/':
+                new_path += '\\'
+            else:
+                new_path += element
+        return os.path.join(wd, new_path[2:])
+    else:
+        return path
+
+
 def import_folder(path):
     surfaces = []
     path_list = []
+    path = find_files(path)
     for _, __, img_file in walk(path):
         for image in img_file:
-            full_path = path + '/' + image
+            full_path = (path + '/' + image)
             path_list.append(full_path)
     path_list.sort()
-    for path in path_list:
-        surface = pygame.image.load(path).convert_alpha()
+    for pathL in path_list:
+        surface = pygame.image.load(pathL).convert_alpha()
         surfaces.append(surface)
     return surfaces
 
 
 def import_loop(path, dict):
+    path = find_files(path)
     for _, dir, ___ in walk(path):
         for folder in dir:
             full_path = path + folder
@@ -44,7 +63,7 @@ def create_masks(animation_dict, mask_dict_right, mask_dict_left, exclude_masks=
 
 def import_csv_layout(path):
     terrain_map = []
-    with open(path) as map:
+    with open(find_files(path)) as map:
         level = reader(map, delimiter=',')
         for row in level:
             terrain_map.append(list(row))
@@ -52,7 +71,7 @@ def import_csv_layout(path):
 
 
 def import_cut_graphic(path):
-    surface = pygame.image.load(path).convert_alpha()
+    surface = pygame.image.load(find_files(path)).convert_alpha()
     tile_num_x = int(surface.get_width() / tile_size)
     tile_num_y = int(surface.get_height() / tile_size)
 

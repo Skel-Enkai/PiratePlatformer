@@ -4,7 +4,7 @@ import pygame.sprite
 
 from particles import AttackEffect
 from settings import controllers
-from support import import_folder, import_loop, create_masks
+from support import import_folder, import_loop, create_masks, find_files
 
 
 # noinspection PyAttributeOutsideInit
@@ -62,8 +62,8 @@ class Player(pygame.sprite.Sprite):
             self.channel.set_volume(0.0)
         else:
             self.channel.set_volume(0.2)
-        self.jump_sound = pygame.mixer.Sound('./audio/effects/jump.wav')
-        self.hit_sound = pygame.mixer.Sound('./audio/effects/hit.wav')
+        self.jump_sound = pygame.mixer.Sound(find_files('./audio/effects/jump.wav'))
+        self.hit_sound = pygame.mixer.Sound(find_files('./audio/effects/hit.wav'))
 
     def import_character_assets(self):
         sword_effects_path = './graphics/character/Sword Effects/'

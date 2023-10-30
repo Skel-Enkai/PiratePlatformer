@@ -3,6 +3,7 @@ import pygame.sprite
 from decoration import Sky
 from game_data import levels
 from settings import controllers
+from support import find_files
 from tiles import AnimatedTile
 
 
@@ -32,7 +33,7 @@ class Icon(pygame.sprite.Sprite):
     def __init__(self, pos):
         super().__init__()
         self.pos = pos
-        self.image = pygame.image.load('./graphics/overworld/hat.png').convert_alpha()
+        self.image = pygame.image.load(find_files('./graphics/overworld/hat.png')).convert_alpha()
         self.rect = self.image.get_rect(center=pos)
 
     def update(self):
