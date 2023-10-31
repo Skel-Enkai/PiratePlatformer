@@ -62,10 +62,11 @@ class Enemy(pygame.sprite.Sprite):
         elif self.direction.x < 0:
             self.facing_right = False
 
-    def move(self, x_shift):
+    def move(self, world_shift):
         self.rect.x += int(self.direction.x * self.speed)
-        self.rect.x += x_shift
-        self.collide_rect.centerx = self.rect.centerx
+        self.rect.x += world_shift.x
+        self.rect.y += world_shift.y
+        self.collide_rect.center = self.rect.center
 
 
 # noinspection PyAttributeOutsideInit
@@ -181,11 +182,11 @@ class FierceTooth(Enemy):
                 self.status = '08-Hit'
                 self.knockback = True
 
-    def update(self, x_shift):
+    def update(self, world_shift):
         self.decision()
         self.boundry_detection()
         self.get_status()
-        self.move(x_shift)
+        self.move(world_shift)
 
         self.check_facing()
         self.animate()

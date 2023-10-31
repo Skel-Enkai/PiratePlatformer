@@ -27,9 +27,9 @@ class Effect(pygame.sprite.Sprite):
             if should_flip > 0:
                 self.image = pygame.transform.flip(self.image, True, False)
 
-    def update(self, x_shift):
+    def update(self, world_shift):
         self.animate(should_flip=self.enemy_speed)
-        self.rect.x += x_shift
+        self.rect.center += world_shift
 
 
 class AttackEffect(pygame.sprite.Sprite):

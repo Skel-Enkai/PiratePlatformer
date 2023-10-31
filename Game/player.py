@@ -28,7 +28,7 @@ class Player(pygame.sprite.Sprite):
 
         # player movement
         self.direction = pygame.math.Vector2(0, 0)
-        self.speed = 1
+        self.speed = pygame.Vector2(1, 1)
         self.gravity = 0.32
         self.jump_speed = -2
         self.jump = False
@@ -240,7 +240,7 @@ class Player(pygame.sprite.Sprite):
                 self.jump = False
         else:
             self.direction.y += self.gravity
-        self.collide_rect.y += self.direction.y
+        self.collide_rect.y += (self.speed.y * self.direction.y)
 
     def reset_x(self):
         if self.direction.x >= 0.2:

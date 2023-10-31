@@ -18,12 +18,6 @@ class Level:
         self.level_number = level_number
         level_data = levels[level_number]
         self.new_max_level = level_data['unlock']
-
-        self.world_shift = -2
-        self.world_offset = 0
-        self.current_x = 0
-
-        # surface
         self.display_surface = surface
 
         # audio
@@ -40,11 +34,16 @@ class Level:
         self.player = pygame.sprite.GroupSingle()
         self.goal = pygame.sprite.GroupSingle()
         self.player_setup(player_layout, mute)
-        self.player_speed = self.player.sprite.speed
+        self.player_speed = self.player.sprite.speed.copy()
+        self.player_current_x = 0
 
         # user interface
         self.change_coins = change_coins
         self.change_cur_health = change_cur_health
+
+        # "camera"
+        self.world_shift = pygame.Vector2(0, 0)
+        self.world_offset = pygame.Vector2(0, 0)
 
         # level dict
         self.level_sprites = {'terrain': pygame.sprite.Group(), 'terrain_collidable': pygame.sprite.Group(),
@@ -59,6 +58,7 @@ class Level:
                 self.level_sprites[key] = self.create_tile_group(layout, key)
                 if key == 'terrain':
                     self.world_length = len(layout[0]) * tile_size
+                    self.world_height = len(layout) * tile_size
                     self.level_sprites['terrain_collidable'] = self.create_tile_group(layout, 'terrain_collidable')
 
         # decoration
@@ -76,9 +76,11 @@ class Level:
 
         for row_index, row in enumerate(layout):
             y = tile_size * row_index
+            y += self.initial_offset.y
             for col_index, val in enumerate(row):
                 if val != '-1':
                     x = tile_size * col_index
+                    x += self.initial_offset.x
 
                     if type == 'terrain':
                         terrain_tile_list = import_cut_graphic('./graphics/terrain/terrain_tiles.png')
@@ -134,11 +136,27 @@ class Level:
                 x = tile_size * col_index
                 if val == '0':
                     sprite = Player((x, y), self.display_surface, self.create_jump_particles, mute)
+                    self.set_initial_world_offset(x, y)
+                    sprite.collide_rect.center += self.initial_offset
                     self.player.add(sprite)
                 elif val == '1':
                     hat_surface = pygame.image.load(find_files('./graphics/character/hat.png')).convert_alpha()
                     sprite = StaticTile(tile_size, x, y + 38, hat_surface)
                     self.goal.add(sprite)
+        self.goal.sprite.rect.center += self.initial_offset
+
+    def set_initial_world_offset(self, x, y):
+        start_pos = (x, y)
+        end_pos = (200, 400)
+        x = (end_pos[0] - start_pos[0])
+        y = (end_pos[1] - start_pos[1])
+        direction = pygame.Vector2(x, y)
+        self.initial_offset = pygame.Vector2(0, 0)
+        if start_pos[0] > screen_width:
+            self.initial_offset.x = direction.x
+        if start_pos[1] > screen_height:
+            self.initial_offset.y = direction.y
+        self.world_offset = self.initial_offset
 
     def create_jump_particles(self, pos):
         jump_particle_sprite = Effect(pos, 'jump')
@@ -156,26 +174,51 @@ class Level:
             fall_dust_particle = Effect(pos, 'land')
             self.dust_sprite.add(fall_dust_particle)
 
+    def update_world_shift(self):
+        self.scroll_x()
+        self.scroll_y()
+
     def scroll_x(self):
         player = self.player.sprite
         player_x = player.collide_rect.centerx
         direction_x = player.direction.x
-        speed = round(player.direction.x * self.player_speed)
+        speed = round(player.direction.x * self.player_speed.x)
 
-        if player_x < (screen_width // 3) and direction_x < 0 and self.world_offset < 0:
-            player.speed = 0
-            self.world_shift = -speed
-            self.world_offset -= speed
+        if player_x < (screen_width // 3) and direction_x < 0 and self.world_offset.x < 0:
+            player.speed.x = 0
+            self.world_shift.x = -speed
+            self.world_offset.x -= speed
 
-        elif player_x > (screen_width - screen_width // 3) and direction_x > 0 and \
-                self.world_length >= -self.world_offset + screen_width + 10:
-            self.world_shift = -speed
-            self.world_offset -= speed
-            player.speed = 0
+        elif player_x > (screen_width // (3/2)) and direction_x > 0 and \
+                self.world_length >= -self.world_offset.x + screen_width:
+            self.world_shift.x = -speed
+            self.world_offset.x -= speed
+            player.speed.x = 0
 
         else:
-            self.world_shift = 0
-            player.speed = self.player_speed
+            self.world_shift.x = 0
+            player.speed.x = self.player_speed.x
+
+    def scroll_y(self):
+        player = self.player.sprite
+        player_y = player.collide_rect.centery
+
+        direction_y = player.direction.y
+        speed = round(player.direction.y * self.player_speed.y)
+
+        if player_y < (screen_height // 3) and direction_y < 0 <= self.world_offset.y:
+            player.speed.y = 0
+            self.world_shift.y = -speed
+            self.world_offset.y -= speed
+
+        elif player_y > (screen_height // (3/2)) and direction_y > 0 and self.world_offset.y > 0:
+            self.world_shift.y = -speed
+            self.world_offset.y -= speed
+            player.speed.y = 0
+
+        else:
+            self.world_shift.y = 0
+            player.speed.y = self.player_speed.y
 
     def horizontal_movement_collision(self):
         player = self.player.sprite
@@ -183,7 +226,7 @@ class Level:
                 (player.collide_rect.right < screen_width and not player.direction.x < 0):
             # print('player speed=' + str(player.speed))
             # print('player.direction.x =' + str(player.direction.x))
-            player.collide_rect.x += round(player.direction.x * player.speed)
+            player.collide_rect.x += round(player.direction.x * player.speed.x)
             # print(round(player.direction.x * player.speed))
 
         for sprite in self.level_sprites['crates'].sprites():
@@ -191,15 +234,15 @@ class Level:
                 if player.direction.x < 0:
                     player.collide_rect.left = sprite.hitbox_rect.right
                     player.on_left = True
-                    self.current_x = player.collide_rect.left
+                    self.player_current_x = player.collide_rect.left
                 elif player.direction.x > 0:
                     player.collide_rect.right = sprite.hitbox_rect.left
                     player.on_right = True
-                    self.current_x = player.collide_rect.right
+                    self.player_current_x = player.collide_rect.right
 
-        if player.on_left and (player.collide_rect.left < self.current_x or player.direction.x >= 0):
+        if player.on_left and (player.collide_rect.left < self.player_current_x or player.direction.x >= 0):
             player.on_left = False
-        if player.on_right and (player.collide_rect.right > self.current_x or player.direction.x <= 0):
+        if player.on_right and (player.collide_rect.right > self.player_current_x or player.direction.x <= 0):
             player.on_right = False
 
     def vertical_movement_collision(self):
@@ -258,7 +301,7 @@ class Level:
                     enemy.constraints.append(collided)
 
     def check_death(self):
-        if self.player.sprite.collide_rect.top > screen_height + 400:
+        if self.player.sprite.rect.y > screen_height:
             self.change_cur_health(-100)
 
     def check_win(self):
@@ -362,7 +405,7 @@ class Level:
         #                                   enemy.attack_effect.sprite.rect)
 
     def update(self, joystick, controller):
-        self.scroll_x()
+        self.update_world_shift()
         self.level_sprites['bg palms'].update(self.world_shift)
         self.level_sprites['terrain'].update(self.world_shift)
         self.level_sprites['terrain_collidable'].update(self.world_shift)

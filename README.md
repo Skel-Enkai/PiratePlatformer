@@ -1,6 +1,6 @@
 # PiratePlatformer
 This is my second game developed in Pygame. (I followed a tutorial by ClearCode, however I've been working on expanding the game)
-Almost all of the commits on this repository happened after I completed the tutorial and have been either additions or modifications to the project.
+Almost all the commits on this repository happened after I completed the tutorial and have been either additions or modifications to the project.
 The art is by 'Pixel Frog' who released the pixel art for free (under a Public Domain License), I made a small donation to them and this is where to find them: https://pixelfrog-assets.itch.io/
 
 All the files that the game requires are in the Directory 'Game': 'Tiled' is the directory where my save files for the level editor that generates CSV files for game is stored, 'Treasure Hunters' is where the orignial art files I have stored by the artist 'Pixel Frog'. 

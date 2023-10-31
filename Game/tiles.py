@@ -10,8 +10,8 @@ class Tile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=(x, y))
         self.offset = 0
 
-    def update(self, x_shift):
-        self.rect.x += x_shift
+    def update(self, world_shift):
+        self.rect.center += world_shift
 
 
 class StaticTile(Tile):
@@ -27,9 +27,9 @@ class Crate(StaticTile):
         self.rect = self.image.get_rect(bottomleft=(x, offset_y))
         self.hitbox_rect = self.rect.inflate(-20, 0)
 
-    def update(self, x_shift):
-        self.rect.x += x_shift
-        self.hitbox_rect.x += x_shift
+    def update(self, world_shift):
+        self.rect.center += world_shift
+        self.hitbox_rect.center += world_shift
 
 
 class AnimatedTile(Tile):
@@ -46,9 +46,9 @@ class AnimatedTile(Tile):
             self.frame_index = 0
         self.image = self.frames[int(self.frame_index)]
 
-    def update(self, x_shift):
+    def update(self, world_shift):
         self.animate()
-        self.rect.x += x_shift
+        self.rect.center += world_shift
 
 
 class Coin(AnimatedTile):
