@@ -1,6 +1,7 @@
 vertical_tiles_on_screen = 11
+horizontal_tiles_on_screen = 18
 tile_size: int = 64
-screen_width = 1200
+screen_width = tile_size * horizontal_tiles_on_screen
 screen_height = tile_size * vertical_tiles_on_screen
 
 controllers = {'PS5 Controller': {'left_pad': 13, 'right_pad': 14, 'up_pad': 11, 'down_pad': 12, 'cross': 0,

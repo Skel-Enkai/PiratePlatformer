@@ -138,10 +138,11 @@ class Level:
                     sprite = Player((x, y), self.display_surface, self.create_jump_particles, mute)
                     self.set_initial_world_offset(x, y)
                     sprite.collide_rect.center += self.initial_offset
+                    sprite.collide_rect.centerx -= 32
                     self.player.add(sprite)
                 elif val == '1':
                     hat_surface = pygame.image.load(find_files('./graphics/character/hat.png')).convert_alpha()
-                    sprite = StaticTile(tile_size, x, y + 38, hat_surface)
+                    sprite = StaticTile(tile_size, x + 8, y + 38, hat_surface)
                     self.goal.add(sprite)
         self.goal.sprite.rect.center += self.initial_offset
 
