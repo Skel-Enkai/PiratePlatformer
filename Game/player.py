@@ -95,10 +95,7 @@ class Player(pygame.sprite.Sprite):
         self.dust_run_particles = import_folder("./graphics/character/dust_particles/run")
 
     def animate(self):
-        if self.status == '10-Run Sword':
-            self.animations_speed = 0.15
-        else:
-            self.animations_speed = 0.10
+        self.set_animation_speed()
         self.frame_index += self.animations_speed
         animation = self.animations[self.status]
         if self.frame_index >= len(animation):
@@ -116,6 +113,12 @@ class Player(pygame.sprite.Sprite):
             self.mask = self.mask_animations_left[key][index]
         else:
             self.mask = self.mask_animations_right[key][index]
+
+    def set_animation_speed(self):
+        if self.status == '10-Run Sword':
+            self.animations_speed = 0.15
+        else:
+            self.animations_speed = 0.10
 
     def reset_status(self):
         if not self.should_reset_status():

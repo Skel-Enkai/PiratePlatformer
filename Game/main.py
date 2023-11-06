@@ -60,6 +60,12 @@ async def main():
                 current_controller = 0
                 if number_joys > 0:
                     joysticks = [pygame.joystick.Joystick(x) for x in range(number_joys)]
+                    for x in joysticks:
+                        if x.get_name() not in controllers.keys():
+                            joysticks.remove(x)
+                            print(x.get_name() + ' is not a currently supported controller.')
+                    if not joysticks:
+                        joysticks = [None]
                 else:
                     joysticks = [None]
 

@@ -13,18 +13,15 @@ class Game:
         self.input_wait = False
         self.level = None
         self.current_level = 0
-        self.max_level = 5
+        # change to control access of starting levels
+        self.max_level = 0
         self.max_health = 100
         self.cur_health = 100
         self.coins = 0
 
-        # surfaces
+        # misc
         self.screen_surface = surface
-
-        # ui
         self.ui = UI(self.screen_surface)
-
-        # controller
         self.controller = False
 
         # audio
@@ -78,7 +75,7 @@ class Game:
             self.cur_health = 100
             self.coins = 0
             # self.max_level = 0 // uncomment for perma death
-            # self.current_level 0 // uncomment for perma death
+            # self.current_level = 0 // uncomment for perma death
             self.create_overworld()
 
     def check_menu(self, joystick):
