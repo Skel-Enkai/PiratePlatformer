@@ -1,7 +1,7 @@
 import pygame.sprite
 
 from decoration import *
-from enemy import FierceTooth
+from enemy import FierceTooth, Crabby
 from game_data import *
 from particles import Effect
 from player import Player
@@ -119,7 +119,10 @@ class Level:
                         sprite = Palm(tile_size, x, y, './graphics/terrain/palm_bg', 64)
 
                     elif type == 'enemies':
-                        sprite = FierceTooth(x, y, self.display_surface, self.player, identifier)
+                        if val == '0':
+                            sprite = FierceTooth(x, y, self.display_surface, self.player, identifier)
+                        elif val == '1':
+                            sprite = Crabby(x, y, self.display_surface, self.player, identifier)
                         identifier += 1
 
                     elif type == 'constraints':
@@ -190,7 +193,7 @@ class Level:
             self.world_shift.x = -speed
             self.world_offset.x -= speed
 
-        elif player_x > (screen_width // (3/2)) and direction_x > 0 and \
+        elif player_x > (screen_width // (3 / 2)) and direction_x > 0 and \
                 self.world_length >= -self.world_offset.x + screen_width:
             self.world_shift.x = -speed
             self.world_offset.x -= speed
@@ -212,7 +215,7 @@ class Level:
             self.world_shift.y = -speed
             self.world_offset.y -= speed
 
-        elif player_y > (screen_height // (3/2)) and direction_y > 0 and self.world_offset.y > 0:
+        elif player_y > (screen_height // (3 / 2)) and direction_y > 0 and self.world_offset.y > 0:
             self.world_shift.y = -speed
             self.world_offset.y -= speed
             player.speed.y = 0
@@ -283,7 +286,7 @@ class Level:
         if player.on_ceiling and player.direction.y > 0 or player.direction.y < 1:
             player.on_ceiling = False
 
-    def enemy_collision_boundry(self):
+    def enemy_collision_boundary(self):
         enemy_sprites = self.level_sprites['enemies']
         constraint_sprites = self.level_sprites['constraints']
         for enemy in enemy_sprites:
@@ -343,13 +346,13 @@ class Level:
     def check_player_attack_hits(player, enemy):
         if player.attack.sprite is not None:
             if pygame.sprite.collide_mask(player.attack.sprite, enemy):
-                enemy.damage(-45)
+                enemy.damage(-50)
 
     def check_enemy_attack_hits(self, enemy, player):
         if enemy.attack_effect.sprite is not None:
             if pygame.sprite.collide_mask(player, enemy.attack_effect.sprite):
                 # add more flair to this interaction
-                self.change_cur_health(-30)
+                self.change_cur_health(-25)
                 player.knockback_init()
 
     def check_enemy_collisions(self, joystick):
@@ -391,9 +394,9 @@ class Level:
 
         # pygame.draw.rect(self.display_surface, 'red', self.player.sprite.rect)
         # pygame.draw.rect(self.display_surface, 'red', player.collide_rect)
-        # for enemy in self.enemy_sprites:
-        #     self.display_surface.blit(enemy.mask.to_surface(unsetcolor=None, setcolor='Red'), enemy.rect)
-        #     pygame.draw.rect(self.display_surface, 'red', enemy.collide_rect)
+        # for enemy in self.level_sprites['enemies']:
+        #    self.display_surface.blit(enemy.mask.to_surface(unsetcolor=None, setcolor='Red'), enemy.rect)
+        #    pygame.draw.rect(self.display_surface, 'red', enemy.collide_rect)
 
         # attack effects debug
         # player = self.player.sprite
@@ -415,7 +418,7 @@ class Level:
         self.level_sprites['coins'].update(self.world_shift)
         self.level_sprites['constraints'].update(self.world_shift)
         self.level_sprites['enemies'].update(self.world_shift)
-        self.enemy_collision_boundry()
+        self.enemy_collision_boundary()
         self.level_sprites['fg palms'].update(self.world_shift)
         self.goal.update(self.world_shift)
         self.dust_sprite.update(self.world_shift)
