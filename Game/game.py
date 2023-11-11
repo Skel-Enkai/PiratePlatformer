@@ -54,6 +54,7 @@ class Game:
             pygame.mixer.pause()
 
     def create_overworld(self, new_max_level=0):
+        self.check_death()
         if new_max_level > self.max_level:
             self.max_level = new_max_level
         self.overworld = Overworld(self.screen_surface, self.create_level, self.current_level, self.max_level)
@@ -62,6 +63,13 @@ class Game:
         self.music.play(self.overworld_music, loops=-1)
         if self.mute_flag:
             pygame.mixer.pause()
+
+    def check_death(self):
+        if self.cur_health <= 0:
+            self.cur_health = 100
+            self.coins = 0
+            # self.max_level = 0 // uncomment for perma death
+            # self.current_level = 0 // uncomment for perma death
 
     def change_coins(self, amount):
         self.coins += amount
@@ -72,11 +80,7 @@ class Game:
 
     def check_game_over(self):
         if self.cur_health <= 0:
-            self.cur_health = 100
-            self.coins = 0
-            # self.max_level = 0 // uncomment for perma death
-            # self.current_level = 0 // uncomment for perma death
-            self.create_overworld()
+            self.level.player.sprite.die()
 
     def check_menu(self, joystick):
         keys = pygame.key.get_pressed()

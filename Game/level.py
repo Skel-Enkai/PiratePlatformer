@@ -33,7 +33,7 @@ class Level:
         player_layout = import_csv_layout(level_data['player'])
         self.player = pygame.sprite.GroupSingle()
         self.goal = pygame.sprite.GroupSingle()
-        self.player_setup(player_layout, mute)
+        self.player_setup(player_layout, mute, create_overworld)
         self.player_speed = self.player.sprite.speed.copy()
         self.player_current_x = 0
 
@@ -128,17 +128,21 @@ class Level:
                     elif type == 'constraints':
                         sprite = Tile(tile_size, x, y)
 
-                    sprite_group.add(sprite)
+                    try:
+                        sprite_group.add(sprite)
+                    except ValueError:
+                        print('Tried to add object of type ' + type + ' with val ' + val + ' but no object found.')
 
         return sprite_group
 
-    def player_setup(self, layout, mute):
+    def player_setup(self, layout, mute, create_overworld):
         for row_index, row in enumerate(layout):
             y = tile_size * row_index
             for col_index, val in enumerate(row):
                 x = tile_size * col_index
                 if val == '0':
-                    sprite = Player((x, y), self.display_surface, self.create_jump_particles, mute)
+                    sprite = Player((x, y), self.display_surface, self.create_jump_particles, mute,
+                                    create_overworld)
                     self.set_initial_world_offset(x, y)
                     sprite.collide_rect.center += self.initial_offset
                     sprite.collide_rect.centerx -= 32
@@ -305,8 +309,9 @@ class Level:
                     enemy.constraints.append(collided)
 
     def check_death(self):
-        if self.player.sprite.rect.y > screen_height:
+        if self.player.sprite.rect.y > screen_height + 400:
             self.change_cur_health(-100)
+            self.create_overworld()
 
     def check_win(self):
         if self.goal.sprite.rect.colliderect(self.player.sprite.collide_rect):
@@ -323,36 +328,34 @@ class Level:
                 self.change_coins(coin.value)
 
     def player_enemy_collision(self, player, enemy, joystick):
-        if (player.collide_rect.bottom <= enemy.rect.top + 28 and player.direction.y > 5) or player.direction.y > 6:
-            if player.direction.y > 8:
-                enemy.damage(-35)
-                self.effects_channel.play(self.stomp_sound)
-            player.rebound = True
-            player.bounce(enemy)
-        elif not player.knockback:
+        if not player.knockback:
             self.change_cur_health(-25)
             player.knockback_init()
             if player.direction.y < -2 and (enemy.rect.top <= player.collide_rect.top):
                 player.head_collision()
             elif player.direction.y > 1:
-                player.slow_fall_collision(enemy.speed)
+                player.fall_collision(enemy.collide_rect.centerx)
             else:
-                player.standard_collision(enemy)
+                player.standard_collision(enemy.collide_rect.centerx)
             # joystick rumble
             if joystick:
                 joystick.rumble(1, 1, 300)
 
-    @staticmethod
-    def check_player_attack_hits(player, enemy):
+    def check_player_attack_hits(self, player, enemy):
         if player.attack.sprite is not None:
             if pygame.sprite.collide_mask(player.attack.sprite, enemy):
-                enemy.damage(-50)
+                if player.attack.sprite.type in ('27-Air Attack 1', '28-Air Attack 2'):
+                    player.bounce()
+                    enemy.damage(-60)
+                    self.effects_channel.play(self.stomp_sound)
+                else:
+                    enemy.damage(-50)
 
     def check_enemy_attack_hits(self, enemy, player):
         if enemy.attack_effect.sprite is not None:
             if pygame.sprite.collide_mask(player, enemy.attack_effect.sprite):
                 # add more flair to this interaction
-                self.change_cur_health(-25)
+                self.change_cur_health(-30)
                 player.knockback_init()
 
     def check_enemy_collisions(self, joystick):

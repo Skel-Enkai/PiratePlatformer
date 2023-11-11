@@ -1,5 +1,3 @@
-import math
-
 import pygame.sprite
 
 from particles import AttackEffect
@@ -9,7 +7,7 @@ from support import import_folder, import_loop, create_masks, find_files
 
 # noinspection PyAttributeOutsideInit
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, surface, create_jump_particles, mute):
+    def __init__(self, pos, surface, create_jump_particles, mute, create_overworld):
         super().__init__()
         self.animations = {}
         self.sword_effects = {}
@@ -28,8 +26,8 @@ class Player(pygame.sprite.Sprite):
         # player movement
         self.direction = pygame.math.Vector2(0, 0)
         self.speed = pygame.Vector2(1, 1)
-        self.gravity = 0.32
-        self.jump_speed = -2
+        self.gravity = 0.28
+        self.jump_speed = -1
         self.jump = False
 
         # player status
@@ -42,10 +40,12 @@ class Player(pygame.sprite.Sprite):
         self.rebound = False
         self.knockback = False
         self.can_move = True
+        self.dead = False
 
         # timers
         self.can_attack = True
         self.attack_timer = pygame.event.custom_type()
+        self.create_overworld = create_overworld
 
         # surfaces and masks
         self.display_surface = surface
@@ -68,8 +68,8 @@ class Player(pygame.sprite.Sprite):
         self.attack_data = {'15-Attack 1': ['24-Attack 1', False, 1300, pygame.Vector2(72, 2)],
                             '16-Attack 2': ['25-Attack 2', False, 1300, pygame.Vector2(50, 0)],
                             '17-Attack 3': ['26-Attack 3', False, 1300, pygame.Vector2(50, -10)],
-                            '18-Air Attack 1': ['27-Air Attack 1', True, 1100, pygame.Vector2(24, 48)],
-                            '19-Air Attack 2': ['28-Air Attack 2', True, 1100, pygame.Vector2(40, 30)]}
+                            '18-Air Attack 1': ['27-Air Attack 1', True, 500, pygame.Vector2(24, 48)],
+                            '19-Air Attack 2': ['28-Air Attack 2', True, 500, pygame.Vector2(40, 30)]}
 
     def import_character_assets(self):
         sword_effects_path = './graphics/character/Sword Effects/'
@@ -121,40 +121,49 @@ class Player(pygame.sprite.Sprite):
             self.animations_speed = 0.10
 
     def reset_status(self):
-        if not self.should_reset_status():
+        if self.status == '07-Dead Hit':
+            self.status = '08-Dead Ground'
+        elif self.status == '08-Dead Ground':
+            self.create_overworld()
+        elif self.should_reset_status():
             self.knockback = False
             self.status = 'None'
             self.get_status()
 
     def should_reset_status(self):
         should_reset = ['14-Hit Sword', '15-Attack 1', '16-Attack 2', '17-Attack 3', '18-Air Attack 1',
-                        '19-Air Attack 2']
+                        '19-Air Attack 2', '07-Dead Hit', '08-Dead Ground']
         if self.status in should_reset:
-            return False
-        return True
+            return True
+        return False
 
     def get_status(self):
-        if self.should_reset_status():
+        if not self.should_reset_status():
             current = self.status
             if self.direction.y < 0:
                 self.status = '11-Jump Sword'
             elif self.direction.y > 1:
                 self.status = '12-Fall Sword'
-                self.rebound = False
             else:
                 if self.direction.x == 0:
                     self.status = '09-Idle Sword'
                 else:
                     self.status = '10-Run Sword'
             if self.status != current:
-                self.frame_index = 0
                 self.can_move = True
 
     def knockback_init(self):
         self.frame_index = 0
-        self.can_move = self.jump = False
+        self.can_move = self.jump = self.rebound = False
         self.knockback = True
         self.status = '14-Hit Sword'
+
+    def die(self):
+        if not self.dead:
+            self.frame_index = 0
+            self.status = '07-Dead Hit'
+            self.can_move = self.jump = False
+            self.dead = True
 
     def dust_animate(self):
         if self.status == '10-Run Sword' and self.on_ground:
@@ -172,7 +181,7 @@ class Player(pygame.sprite.Sprite):
                 self.display_surface.blit(pygame.transform.flip(dust_particle, True, False), pos)
 
     def control_player(self, joystick, controller):
-        if self.knockback and self.frame_index >= 2:
+        if self.knockback and self.frame_index >= 2 and not self.dead:
             self.can_move = True
         if controller and joystick:
             self.joystick_input(joystick)
@@ -197,9 +206,6 @@ class Player(pygame.sprite.Sprite):
             elif not (keys[pygame.K_SPACE] or keys[pygame.K_w]):
                 if self.direction.y < -4 and not self.rebound:
                     self.direction.y = -4
-                    self.jump = False
-                elif self.direction.y < -6 and self.rebound:
-                    self.direction.y = -6
                     self.jump = False
             # attacks
             if self.can_attack:
@@ -234,9 +240,6 @@ class Player(pygame.sprite.Sprite):
                 if self.direction.y < -4 and not self.rebound:
                     self.direction.y = -4
                     self.jump = False
-                elif self.direction.y < -6 and self.rebound:
-                    self.direction.y = -6
-                    self.jump = False
             # attacks
             if self.can_attack:
                 if joystick.get_button(controller['square']) and self.on_ground:
@@ -261,13 +264,15 @@ class Player(pygame.sprite.Sprite):
                                      facing=self.facing_right,
                                      right_mask=self.mask_sword_effects_right[attack[0]],
                                      left_mask=self.mask_sword_effects_left[attack[0]],
-                                     offset=attack[3]))
+                                     offset=attack[3], type=attack[0]))
 
     def apply_gravity(self):
         if self.jump:
             self.direction.y += self.jump_speed
-            if self.direction.y <= -7:
+            if self.direction.y <= -7 and not self.rebound:
                 self.jump = False
+            elif self.direction.y <= -9:
+                self.jump = self.rebound = False
         else:
             self.direction.y += self.gravity
         self.collide_rect.y += (self.speed.y * self.direction.y)
@@ -280,32 +285,29 @@ class Player(pygame.sprite.Sprite):
         else:
             self.direction.x = 0
 
-    def bounce(self, enemy):
-        self.jump = True
-        self.direction.y = 0
-        self.collide_rect.bottom = enemy.collide_rect.top
+    def bounce(self):
+        if self.can_move:
+            self.jump = True
+            self.rebound = True
 
     def head_collision(self):
         self.collide_rect.y += -self.direction.y
         self.direction.y = -(self.direction.y // 4)
         self.direction.x = -self.direction.x
 
-    def slow_fall_collision(self, enemy_speed):
-        self.rebound = True
-        self.collide_rect.y += -10
-        self.direction.y = -abs(self.direction.y)
-        self.direction.x = enemy_speed
+    def fall_collision(self, enemy_x):
+        self.direction.x = self.find_direction_collision(enemy_x)
+        self.direction.y = -5
 
-    def standard_collision(self, enemy):
-        if math.copysign(1, enemy.speed) != math.copysign(1, self.direction.x) \
-                or self.direction.x == 0:
-            force = (-self.direction.x / 1.5) + enemy.speed
-            enemy.speed *= -1
+    def standard_collision(self, enemy_x):
+        self.direction.x = self.find_direction_collision(enemy_x)
+        self.direction.y = -4
+
+    def find_direction_collision(self, enemy_x):
+        if self.collide_rect.centerx >= enemy_x:
+            return 2.8
         else:
-            force = (-self.direction.x / 1.5)
-        self.direction.x = force
-        self.collide_rect.x += force
-        self.direction.y = -1 * abs(force)
+            return -2.8
 
     def update(self, joystick, controller, world_shift):
         self.control_player(joystick, controller)

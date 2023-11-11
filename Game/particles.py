@@ -13,8 +13,6 @@ class Effect(pygame.sprite.Sprite):
             self.frames = import_folder("./graphics/character/dust_particles/jump")
         elif type == 'land':
             self.frames = import_folder("./graphics/character/dust_particles/land")
-        elif type == 'enemy_die':
-            self.frames = import_folder("./graphics/enemies/fierce_tooth/dead_hit")
         self.image = self.frames[self.frame_index]
         self.rect = self.image.get_rect(midbottom=pos)
 
@@ -34,16 +32,19 @@ class Effect(pygame.sprite.Sprite):
 
 class AttackEffect(pygame.sprite.Sprite):
     def __init__(self, parent, animation, should_flip=True, facing=True, right_mask=None, left_mask=None,
-                 offset=pygame.Vector2(0, 0), animation_speed=0.1):
+                 offset=pygame.Vector2(0, 0), animation_speed=0.1, type=None):
         super().__init__()
+        # animation
         self.frame_index = 0
         self.animation_speed = animation_speed
         self.frames = animation
         self.image = animation[0]
+        # misc
         self.rect = self.image.get_rect()
         self.offset = offset
-
         self.parent = parent
+        self.type = type
+        # flags and masks
         self.should_flip = should_flip
         self.facing = facing
         self.right_mask = right_mask
