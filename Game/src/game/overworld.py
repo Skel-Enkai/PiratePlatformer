@@ -1,10 +1,10 @@
 import pygame.sprite
 
-from decoration import Sky
-from game_data import levels
-from settings import controllers
-from support import find_files
-from tiles import AnimatedTile
+from data.game_data import levels
+from data.settings import controllers
+from data.support import find_files
+from levels.decoration import Sky
+from levels.tiles import AnimatedTile
 
 
 # bug should be resolved now, however it was already rare to trigger and so pretty hard to test.

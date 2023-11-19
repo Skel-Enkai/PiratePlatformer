@@ -5,7 +5,7 @@ from os import walk
 
 import pygame.surface
 
-from settings import tile_size
+from data.settings import tile_size
 
 
 # noinspection PyProtectedMember

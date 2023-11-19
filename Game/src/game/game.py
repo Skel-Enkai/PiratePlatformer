@@ -1,10 +1,10 @@
 import pygame.time
 
-from level import Level
-from overworld import Overworld
-from settings import controllers
-from support import find_files
-from ui import UI
+from data.settings import controllers
+from data.support import find_files
+from game.overworld import Overworld
+from game.ui import UI
+from levels.level import Level
 
 
 class Game:

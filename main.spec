@@ -2,8 +2,8 @@
 
 
 a = Analysis(
-    ['Game/main.py'],
-    pathex=[],
+    ['Game/src/main.py'],
+    pathex=['/data','/game','/levels'],
     binaries=[],
     datas=[('Game/graphics', 'graphics'), ('Game/audio', 'audio'), ('Game/levels', 'levels')],
     hiddenimports=[],

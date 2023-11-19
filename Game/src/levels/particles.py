@@ -1,6 +1,6 @@
 import pygame.sprite
 
-from support import import_folder
+from data.support import import_folder
 
 
 class Effect(pygame.sprite.Sprite):

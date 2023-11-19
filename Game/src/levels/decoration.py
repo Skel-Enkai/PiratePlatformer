@@ -2,9 +2,9 @@ from random import choice, randint
 
 import pygame.sprite
 
-from settings import *
-from support import import_folder, find_files
-from tiles import AnimatedTile, StaticTile
+from data.settings import *
+from data.support import import_folder, find_files
+from levels.tiles import AnimatedTile, StaticTile
 
 
 class Sky:

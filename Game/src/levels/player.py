@@ -1,8 +1,8 @@
 import pygame.sprite
 
-from particles import AttackEffect
-from settings import controllers
-from support import import_folder, import_loop, create_masks, find_files
+from data.settings import controllers
+from data.support import import_folder, import_loop, create_masks, find_files
+from levels.particles import AttackEffect
 
 
 # noinspection PyAttributeOutsideInit

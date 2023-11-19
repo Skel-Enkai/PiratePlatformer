@@ -3,9 +3,9 @@ import sys
 
 import pygame
 
-from game import Game
-from settings import *
-from support import find_files
+from data.settings import *
+from data.support import find_files
+from game.game import Game
 
 # initialise only needed
 pygame.font.init()

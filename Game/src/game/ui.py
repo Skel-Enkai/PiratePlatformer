@@ -1,6 +1,6 @@
 import pygame.surface
 
-from support import find_files
+from data.support import find_files
 
 
 class UI:
