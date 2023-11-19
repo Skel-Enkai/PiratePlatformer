@@ -239,14 +239,16 @@ class Level:
 
         for sprite in self.level_sprites['crates'].sprites():
             if sprite.hitbox_rect.colliderect(player.collide_rect):
-                if player.direction.x < 0:
-                    player.collide_rect.left = sprite.hitbox_rect.right
-                    player.on_left = True
-                    self.player_current_x = player.collide_rect.left
-                elif player.direction.x > 0:
-                    player.collide_rect.right = sprite.hitbox_rect.left
-                    player.on_right = True
-                    self.player_current_x = player.collide_rect.right
+                if not ((player.collide_rect.bottom < sprite.rect.top - 10) or
+                        (player.collide_rect.top > sprite.rect.bottom + 10)):
+                    if player.direction.x < 0:
+                        player.collide_rect.left = sprite.hitbox_rect.right
+                        player.on_left = True
+                        self.player_current_x = player.collide_rect.left
+                    elif player.direction.x > 0:
+                        player.collide_rect.right = sprite.hitbox_rect.left
+                        player.on_right = True
+                        self.player_current_x = player.collide_rect.right
 
         if player.on_left and (player.collide_rect.left < self.player_current_x or player.direction.x >= 0):
             player.on_left = False
