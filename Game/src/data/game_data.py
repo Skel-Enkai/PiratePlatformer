@@ -1,6 +1,6 @@
 level_0 = {
     'terrain': './levels/0/level_0_terrain.csv',
-    'coins': './levels/0/level_0_coins.csv',
+    'treasure': './levels/0/level_0_coins.csv',
     'fg palms': './levels/0/level_0_fg_palms.csv',
     'bg palms': './levels/0/level_0_bg_palms.csv',
     'crates': './levels/0/level_0_crates.csv',
@@ -16,7 +16,7 @@ level_0 = {
 
 level_1 = {
     # 'terrain': './levels/1/lamar_terrain.csv',
-    # 'coins': './levels/1/lamar_coins.csv',
+    # 'treasure': './levels/1/lamar_coins.csv',
     # 'fg palms': './levels/1/lamar_fg_palms.csv',
     # 'bg palms': './levels/1/lamar_bg_palms.csv',
     # 'crates': './levels/1/lamar_crates.csv',
@@ -25,7 +25,7 @@ level_1 = {
     # 'player': './levels/1/lamar_player.csv',
     # 'grass': './levels/1/lamar_grass.csv',
     'terrain': './levels/3/level_3_terrain.csv',
-    'coins': './levels/3/level_3_coins.csv',
+    'treasure': './levels/3/level_3_coins.csv',
     'fg palms': './levels/3/level_3_fg_palms.csv',
     'bg palms': './levels/3/level_3_bg_palms.csv',
     'crates': './levels/3/level_3_crates.csv',
@@ -40,7 +40,7 @@ level_1 = {
 
 level_2 = {
     'terrain': './levels/2/level_2_terrain.csv',
-    'coins': './levels/2/level_2_coins.csv',
+    'treasure': './levels/2/level_2_coins.csv',
     'fg palms': './levels/2/level_2_fg_palms.csv',
     'bg palms': './levels/2/level_2_bg_palms.csv',
     'crates': './levels/2/level_2_crates.csv',
@@ -55,7 +55,7 @@ level_2 = {
 
 level_3 = {
     'terrain': './levels/3/level_3_terrain.csv',
-    'coins': './levels/3/level_3_coins.csv',
+    'treasure': './levels/3/level_3_coins.csv',
     'fg palms': './levels/3/level_3_fg_palms.csv',
     'bg palms': './levels/3/level_3_bg_palms.csv',
     'crates': './levels/3/level_3_crates.csv',
@@ -69,7 +69,7 @@ level_3 = {
 }
 level_4 = {
     'terrain': './levels/test/test_level_terrain.csv',
-    # 'coins': './levels/3/level_3_coins.csv',
+    # 'treasure': './levels/3/level_3_coins.csv',
     # 'fg palms': './levels/3/level_3_fg_palms.csv',
     # 'bg palms': './levels/3/level_3_bg_palms.csv',
     # 'crates': './levels/3/level_3_crates.csv',
@@ -84,7 +84,7 @@ level_4 = {
 
 level_5 = {
     'terrain': './levels/3/level_3_terrain.csv',
-    'coins': './levels/3/level_3_coins.csv',
+    'treasure': './levels/3/level_3_coins.csv',
     'fg palms': './levels/3/level_3_fg_palms.csv',
     'bg palms': './levels/3/level_3_bg_palms.csv',
     'crates': './levels/3/level_3_crates.csv',

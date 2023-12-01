@@ -61,6 +61,11 @@ def create_masks(animation_dict, mask_dict_right, mask_dict_left, exclude_masks=
                     frame, True, False)))
 
 
+def create_masks_list(animation_list, mask_list):
+    for frame in animation_list:
+        mask_list.append(pygame.mask.from_surface(frame))
+
+
 def import_csv_layout(path):
     terrain_map = []
     with open(find_files(path)) as map:

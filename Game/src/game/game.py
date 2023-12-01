@@ -76,7 +76,10 @@ class Game:
 
     def change_cur_health(self, amount):
         self.cur_health += amount
-        self.channel_effects.play(self.hit_sound)
+        if amount < 0:
+            self.channel_effects.play(self.hit_sound)
+        elif self.cur_health > 100:
+            self.cur_health = 100
 
     def check_game_over(self):
         if self.cur_health <= 0:

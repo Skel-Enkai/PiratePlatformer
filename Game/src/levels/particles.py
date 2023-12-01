@@ -32,7 +32,7 @@ class Effect(pygame.sprite.Sprite):
 
 class AttackEffect(pygame.sprite.Sprite):
     def __init__(self, parent, animation, should_flip=True, facing=True, right_mask=None, left_mask=None,
-                 offset=pygame.Vector2(0, 0), animation_speed=0.1, type=None):
+                 offset=pygame.Vector2(0, 0), animation_speed=0.1, type=None, damage=None):
         super().__init__()
         # animation
         self.frame_index = 0
@@ -44,6 +44,7 @@ class AttackEffect(pygame.sprite.Sprite):
         self.offset = offset
         self.parent = parent
         self.type = type
+        self.damage = damage
         # flags and masks
         self.should_flip = should_flip
         self.facing = facing

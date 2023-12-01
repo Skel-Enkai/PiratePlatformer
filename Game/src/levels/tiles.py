@@ -21,30 +21,25 @@ class StaticTile(Tile):
 
 
 class AnimatedTile(Tile):
-    def __init__(self, size, x, y, path, anim_speed=0.10):
+    def __init__(self, size, x, y, path, anim_speed=0.10, scale=1):
         super().__init__(size, x, y)
-        self.frames = import_folder(path)
+        frames = import_folder(path)
+        self.frames = []
+        for frame in frames:
+            self.frames.append(pygame.transform.scale_by(frame, scale))
         self.frame_index = 0
         self.anim_speed = anim_speed
         self.image = self.frames[self.frame_index]
 
     def animate(self):
         self.frame_index += self.anim_speed
-        if self.frame_index > len(self.frames):
+        if self.frame_index >= len(self.frames):
             self.frame_index = 0
         self.image = self.frames[int(self.frame_index)]
 
     def update(self, world_shift):
         self.animate()
         self.rect.center += world_shift
-
-
-class AnimatedCenteredTile(AnimatedTile):
-    def __init__(self, size, x, y, path):
-        super().__init__(size, x, y, path)
-        center_x = x + (size // 2)
-        center_y = y + (size // 2)
-        self.rect = self.image.get_rect(center=(center_x, center_y))
 
 
 class Crate(StaticTile):

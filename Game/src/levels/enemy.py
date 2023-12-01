@@ -164,8 +164,6 @@ class FierceTooth(Enemy):
     def __init__(self, x, y, display_surface, player, identifier):
         super().__init__(x, y, './graphics/enemies/fierce_tooth/', display_surface, player, identifier=identifier)
         self.rect.center += pygame.Vector2(10, 10)
-
-        # collision detection rect
         self.collide_rect = pygame.Rect(x, y, 34, 42)
         self.collide_rect.bottom = self.rect.bottom
 
@@ -194,7 +192,7 @@ class FierceTooth(Enemy):
                                                 should_flip=self.facing_right, facing=self.facing_right,
                                                 right_mask=self.masks_right['11-Attack Effect'],
                                                 left_mask=self.masks_left['11-Attack Effect'],
-                                                offset=pygame.Vector2(60, -12)))
+                                                offset=pygame.Vector2(60, -12), damage=-30))
 
 
 class Crabby(Enemy):
@@ -202,8 +200,6 @@ class Crabby(Enemy):
         super().__init__(x, y, './graphics/enemies/Crabby/', display_surface, player, health=120,
                          identifier=identifier)
         self.rect.center += pygame.Vector2(8, 8)
-
-        # collide_rect
         self.collide_rect = pygame.Rect(x, y, 34, 42)
         self.collide_rect.bottom = self.rect.bottom
 
@@ -214,8 +210,8 @@ class Crabby(Enemy):
             if abs(rect_ydifference) <= 60:
                 if abs(rect_xdifference) >= 300:
                     self.direction.x = 0
-                elif abs(rect_xdifference) <= 130 and ((self.facing_right and rect_xdifference < 0) or
-                                                       (not self.facing_right and rect_xdifference > 0)):
+                elif (130 >= abs(rect_xdifference) >= 90 and ((self.facing_right and rect_xdifference < 0) or
+                      (not self.facing_right and rect_xdifference > 0))):
                     self.anticipate_attack()
                 elif rect_xdifference < 0:
                     self.direction.x = 1
@@ -232,4 +228,4 @@ class Crabby(Enemy):
                                                 should_flip=self.facing_right, facing=self.facing_right,
                                                 right_mask=self.masks_right['11-Attack Effect'],
                                                 left_mask=self.masks_left['11-Attack Effect'],
-                                                offset=pygame.Vector2(0, 0)))
+                                                offset=pygame.Vector2(0, 0), damage=-50))

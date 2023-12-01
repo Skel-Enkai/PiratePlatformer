@@ -1,7 +1,6 @@
 import pygame.sprite
 
 from data.game_data import *
-from data.settings import screen_height, screen_width
 from data.support import import_csv_layout, import_cut_graphic
 from levels.decoration import *
 from levels.enemy import FierceTooth, Crabby
@@ -49,7 +48,7 @@ class Level:
         # level dict
         self.level_sprites = {'terrain': pygame.sprite.Group(), 'terrain_collidable': pygame.sprite.Group(),
                               'grass': pygame.sprite.Group(), 'crates': pygame.sprite.Group(),
-                              'coins': pygame.sprite.Group(), 'fg palms': pygame.sprite.Group(),
+                              'treasure': pygame.sprite.Group(), 'fg palms': pygame.sprite.Group(),
                               'bg palms': pygame.sprite.Group(), 'enemies': pygame.sprite.Group(),
                               'constraints': pygame.sprite.Group()}
 
@@ -82,52 +81,54 @@ class Level:
                 if val != '-1':
                     x = tile_size * col_index
                     x += self.initial_offset.x
+                    match type:
+                        case 'terrain':
+                            terrain_tile_list = import_cut_graphic('./graphics/terrain/terrain_tiles.png')
+                            tile_surface = terrain_tile_list[int(val)]
+                            sprite = StaticTile(tile_size, x, y, tile_surface)
 
-                    if type == 'terrain':
-                        terrain_tile_list = import_cut_graphic('./graphics/terrain/terrain_tiles.png')
-                        tile_surface = terrain_tile_list[int(val)]
-                        sprite = StaticTile(tile_size, x, y, tile_surface)
+                        case 'terrain_collidable':
+                            collide_list = ('0', '1', '2', '3', '12', '13', '14', '15')
+                            for ident in collide_list:
+                                if val == ident:
+                                    terrain_tile_list = import_cut_graphic('./graphics/terrain/terrain_tiles.png')
+                                    tile_surface = terrain_tile_list[int(val)]
+                                    sprite = StaticTile(tile_size, x, y, tile_surface)
 
-                    if type == 'terrain_collidable':
-                        collide_list = ('0', '1', '2', '3', '12', '13', '14', '15')
-                        for ident in collide_list:
-                            if val == ident:
-                                terrain_tile_list = import_cut_graphic('./graphics/terrain/terrain_tiles.png')
-                                tile_surface = terrain_tile_list[int(val)]
-                                sprite = StaticTile(tile_size, x, y, tile_surface)
+                        case 'grass':
+                            grass_tile_list = import_cut_graphic('./graphics/decoration/grass/grass.png')
+                            tile_surface = grass_tile_list[int(val)]
+                            sprite = StaticTile(tile_size, x, y, tile_surface)
 
-                    elif type == 'grass':
-                        grass_tile_list = import_cut_graphic('./graphics/decoration/grass/grass.png')
-                        tile_surface = grass_tile_list[int(val)]
-                        sprite = StaticTile(tile_size, x, y, tile_surface)
+                        case 'crates':
+                            sprite = Crate(tile_size, x, y)
 
-                    elif type == 'crates':
-                        sprite = Crate(tile_size, x, y)
+                        case 'treasure':
+                            if val == '0':
+                                sprite = Coin(tile_size, x, y, './graphics/treasure/gold_coin', 5)
+                            elif val == '1':
+                                sprite = Coin(tile_size, x, y, './graphics/treasure/silver_coin', 1)
+                            elif val == '2':
+                                sprite = RedPotion(tile_size, x, y, self.change_cur_health)
 
-                    elif type == 'coins':
-                        if val == '0':
-                            sprite = Coin(tile_size, x, y, './graphics/coins/gold', 5)
-                        elif val == '1':
-                            sprite = Coin(tile_size, x, y, './graphics/coins/silver', 1)
+                        case 'fg palms':
+                            if val == '0':
+                                sprite = Palm(tile_size, x, y, './graphics/terrain/palm_small', 38)
+                            elif val == '1':
+                                sprite = Palm(tile_size, x, y, './graphics/terrain/palm_large', 72)
 
-                    elif type == 'fg palms':
-                        if val == '0':
-                            sprite = Palm(tile_size, x, y, './graphics/terrain/palm_small', 38)
-                        elif val == '1':
-                            sprite = Palm(tile_size, x, y, './graphics/terrain/palm_large', 72)
+                        case 'bg palms':
+                            sprite = Palm(tile_size, x, y, './graphics/terrain/palm_bg', 64)
 
-                    elif type == 'bg palms':
-                        sprite = Palm(tile_size, x, y, './graphics/terrain/palm_bg', 64)
+                        case 'enemies':
+                            if val == '0':
+                                sprite = FierceTooth(x, y, self.display_surface, self.player, identifier)
+                            elif val == '1':
+                                sprite = Crabby(x, y, self.display_surface, self.player, identifier)
+                            identifier += 1
 
-                    elif type == 'enemies':
-                        if val == '0':
-                            sprite = FierceTooth(x, y, self.display_surface, self.player, identifier)
-                        elif val == '1':
-                            sprite = Crabby(x, y, self.display_surface, self.player, identifier)
-                        identifier += 1
-
-                    elif type == 'constraints':
-                        sprite = Tile(tile_size, x, y)
+                        case 'constraints':
+                            sprite = Tile(tile_size, x, y)
 
                     try:
                         sprite_group.add(sprite)
@@ -152,6 +153,7 @@ class Level:
                     hat_surface = pygame.image.load(find_files('./graphics/character/hat.png')).convert_alpha()
                     sprite = StaticTile(tile_size, x + 8, y + 38, hat_surface)
                     self.goal.add(sprite)
+
         self.goal.sprite.rect.center += self.initial_offset
 
     def set_initial_world_offset(self, x, y):
@@ -240,20 +242,24 @@ class Level:
 
         for sprite in self.level_sprites['crates'].sprites():
             if sprite.hitbox_rect.colliderect(player.collide_rect):
-                if not ((player.collide_rect.bottom < sprite.rect.top - 10) or
-                        (player.collide_rect.top > sprite.rect.bottom + 10)):
-                    if player.direction.x < 0:
-                        player.collide_rect.left = sprite.hitbox_rect.right
-                        player.on_left = True
-                        self.player_current_x = player.collide_rect.left
-                    elif player.direction.x > 0:
-                        player.collide_rect.right = sprite.hitbox_rect.left
-                        player.on_right = True
-                        self.player_current_x = player.collide_rect.right
 
-        if player.on_left and (player.collide_rect.left < self.player_current_x or player.direction.x >= 0):
+                if player.direction.x > 0 and player.collide_rect.centerx < sprite.hitbox_rect.centerx:
+                    player.collide_rect.right = sprite.hitbox_rect.left
+                    player.on_right = True
+                    self.player_current_x = player.collide_rect.right
+
+                elif player.direction.x < 0 and player.collide_rect.centerx > sprite.hitbox_rect.centerx:
+                    player.collide_rect.left = sprite.hitbox_rect.right
+                    player.on_left = True
+                    self.player_current_x = player.collide_rect.left
+
+        self.set_horizontal_flags(player, self.player_current_x)
+
+    @staticmethod
+    def set_horizontal_flags(player, current_x):
+        if player.on_left and (player.collide_rect.left < current_x or player.direction.x >= 0):
             player.on_left = False
-        if player.on_right and (player.collide_rect.right > self.player_current_x or player.direction.x <= 0):
+        if player.on_right and (player.collide_rect.right > current_x or player.direction.x <= 0):
             player.on_right = False
 
     def vertical_movement_collision(self):
@@ -262,32 +268,46 @@ class Level:
         self.get_player_on_ground()
 
         for sprite in self.level_sprites['crates'].sprites():
-            if sprite.hitbox_rect.colliderect(player.collide_rect):
-                if player.direction.y < 0:
-                    player.collide_rect.top = sprite.hitbox_rect.bottom
-                    player.direction.y = 0.4
-                    player.on_ceiling = True
-                elif player.direction.y > 0 and player.collide_rect.bottom <= sprite.rect.top + 10 + player.direction.y:
-                    player.collide_rect.bottom = sprite.hitbox_rect.top
-                    player.direction.y = 0
-                    player.on_ground = True
+            if sprite.hitbox_rect.inflate(-20, 0).colliderect(player.collide_rect):
+                if self.check_upwards(player, sprite):
+                    self.upwards_collision(player, sprite.hitbox_rect)
+                elif self.check_downwards(player, sprite):
+                    self.downwards_collision(player, sprite.hitbox_rect)
 
         for sprite in self.level_sprites['terrain_collidable'].sprites():
-            if sprite.rect.inflate(-18, 0).colliderect(player.collide_rect):
-                if player.direction.y > 0.4 and player.collide_rect.bottom <= sprite.rect.top + 10 + player.direction.y:
-                    player.collide_rect.bottom = sprite.rect.top
-                    player.direction.y = 0
-                    player.on_ground = True
+            if sprite.rect.inflate(-20, 0).colliderect(player.collide_rect) and self.check_downwards(player, sprite):
+                self.downwards_collision(player, sprite.rect)
 
         for sprite in self.level_sprites['fg palms'].sprites():
-            if sprite.rect.inflate(-22, 0).move(10, 0).colliderect(player.collide_rect):
-                if player.direction.y > 0.4 and player.collide_rect.bottom <= sprite.rect.top + 10 + player.direction.y:
-                    player.collide_rect.bottom = sprite.rect.top
-                    player.direction.y = 0
-                    player.on_ground = True
+            if (sprite.rect.inflate(-30, 0).move(10, 0).colliderect(player.collide_rect)
+                    and self.check_downwards(player, sprite)):
+                self.downwards_collision(player, sprite.rect)
 
         self.create_landing_dust()
+        self.set_vertical_flags(player)
 
+    @staticmethod
+    def check_downwards(player, sprite):
+        return player.direction.y > 0 and player.collide_rect.bottom < sprite.rect.top + 10 + player.direction.y
+
+    @staticmethod
+    def downwards_collision(player, hitbox):
+        player.collide_rect.bottom = hitbox.top
+        player.direction.y = 0
+        player.on_ground = True
+
+    @staticmethod
+    def check_upwards(player, sprite):
+        return player.direction.y < 0 and player.collide_rect.top > sprite.rect.bottom - 10 + player.direction.y
+
+    @staticmethod
+    def upwards_collision(player, hitbox):
+        player.collide_rect.top = hitbox.bottom
+        player.direction.y = 1.0
+        player.on_ceiling = True
+
+    @staticmethod
+    def set_vertical_flags(player):
         if player.on_ground and player.direction.y < 0 or player.direction.y > 1:
             player.on_ground = False
         if player.on_ceiling and player.direction.y > 0 or player.direction.y < 1:
@@ -320,15 +340,19 @@ class Level:
         if self.goal.sprite.rect.colliderect(self.player.sprite.collide_rect):
             self.create_overworld(self.new_max_level)
 
-    # add generate masks on load
-    def check_coin_collisions(self):
+    def check_treasure_collide(self):
         player = self.player.sprite
-        collided_coins = pygame.sprite.spritecollide(player, self.level_sprites['coins'], True,
-                                                     pygame.sprite.collide_mask)
-        if collided_coins:
-            self.effects_channel.play(self.coin_sound)
-            for coin in collided_coins:
-                self.change_coins(coin.value)
+        collided_treasure = pygame.sprite.spritecollide(player, self.level_sprites['treasure'], False,
+                                                        pygame.sprite.collide_mask)
+        if collided_treasure:
+            for treasure in collided_treasure:
+                treasure.collect()
+                if treasure.name == 'Coin':
+                    self.effects_channel.play(self.coin_sound)
+                    self.change_coins(treasure.value)
+                elif treasure.name == 'Potion':
+                    self.effects_channel.play(self.coin_sound)
+                    treasure.consume()
 
     def player_enemy_collision(self, player, enemy, joystick):
         if not player.knockback:
@@ -340,25 +364,23 @@ class Level:
                 player.fall_collision(enemy.collide_rect.centerx)
             else:
                 player.standard_collision(enemy.collide_rect.centerx)
-            # joystick rumble
             if joystick:
                 joystick.rumble(1, 1, 300)
 
     def check_player_attack_hits(self, player, enemy):
-        if player.attack.sprite is not None:
-            if pygame.sprite.collide_mask(player.attack.sprite, enemy):
+        attack = player.attack.sprite
+        if attack is not None:
+            if pygame.sprite.collide_mask(attack, enemy):
+                enemy.damage(attack.damage)
                 if player.attack.sprite.type in ('27-Air Attack 1', '28-Air Attack 2'):
                     player.bounce()
-                    enemy.damage(-60)
                     self.effects_channel.play(self.stomp_sound)
-                else:
-                    enemy.damage(-50)
 
     def check_enemy_attack_hits(self, enemy, player):
         if enemy.attack_effect.sprite is not None:
             if pygame.sprite.collide_mask(player, enemy.attack_effect.sprite):
                 # add more flair to this interaction
-                self.change_cur_health(-30)
+                self.change_cur_health(enemy.attack_effect.sprite.damage)
                 player.knockback_init()
 
     def check_enemy_collisions(self, joystick):
@@ -379,7 +401,7 @@ class Level:
         self.level_sprites['terrain'].draw(self.display_surface)
         self.level_sprites['grass'].draw(self.display_surface)
         self.level_sprites['crates'].draw(self.display_surface)
-        self.level_sprites['coins'].draw(self.display_surface)
+        self.level_sprites['treasure'].draw(self.display_surface)
         self.level_sprites['enemies'].draw(self.display_surface)
         self.dust_sprite.draw(self.display_surface)
         self.player.draw(self.display_surface)
@@ -414,30 +436,33 @@ class Level:
         #         self.display_surface.blit(enemy.attack_effect.sprite.mask.to_surface(unsetcolor=None, setcolor='Red'),
         #                                   enemy.attack_effect.sprite.rect)
 
-    def update(self, joystick, controller):
+    def update_scene(self):
         self.update_world_shift()
         self.level_sprites['bg palms'].update(self.world_shift)
         self.level_sprites['terrain'].update(self.world_shift)
         self.level_sprites['terrain_collidable'].update(self.world_shift)
         self.level_sprites['grass'].update(self.world_shift)
         self.level_sprites['crates'].update(self.world_shift)
-        self.level_sprites['coins'].update(self.world_shift)
+        self.level_sprites['treasure'].update(self.world_shift)
         self.level_sprites['constraints'].update(self.world_shift)
         self.level_sprites['enemies'].update(self.world_shift)
         self.enemy_collision_boundary()
         self.level_sprites['fg palms'].update(self.world_shift)
         self.goal.update(self.world_shift)
         self.dust_sprite.update(self.world_shift)
+
+    def update(self, joystick, controller):
+        self.update_scene()
         # player and movement
         self.player.update(joystick, controller, self.world_shift)
-        self.horizontal_movement_collision()
         self.vertical_movement_collision()
+        self.horizontal_movement_collision()
         self.player.sprite.rect.center = self.player.sprite.collide_rect.center
         # checks
         self.check_death()
         self.check_win()
         self.check_enemy_collisions(joystick)
-        self.check_coin_collisions()
+        self.check_treasure_collide()
 
     def run(self, joystick, controller):
         self.draw()

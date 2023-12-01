@@ -18,7 +18,7 @@ class Player(pygame.sprite.Sprite):
         self.collide_rect = self.rect.inflate(-94, -34)
 
         # dust particles
-        self.import_dust_run_particles()
+        self.dust_run_particles = import_folder("./graphics/character/dust_particles/run")
         self.dust_frame_index = 0
         self.dust_animations_speed = 0.15
         self.create_jump_particles = create_jump_particles
@@ -65,11 +65,11 @@ class Player(pygame.sprite.Sprite):
         self.hit_sound = pygame.mixer.Sound(find_files('./audio/effects/hit.wav'))
 
         # attack data
-        self.attack_data = {'15-Attack 1': ['24-Attack 1', False, 1300, pygame.Vector2(72, 2)],
-                            '16-Attack 2': ['25-Attack 2', False, 1300, pygame.Vector2(50, 0)],
-                            '17-Attack 3': ['26-Attack 3', False, 1300, pygame.Vector2(50, -10)],
-                            '18-Air Attack 1': ['27-Air Attack 1', True, 500, pygame.Vector2(24, 48)],
-                            '19-Air Attack 2': ['28-Air Attack 2', True, 500, pygame.Vector2(40, 30)]}
+        self.attack_data = {'15-Attack 1': ['24-Attack 1', False, 1300, pygame.Vector2(72, 2), -40],
+                            '16-Attack 2': ['25-Attack 2', False, 1300, pygame.Vector2(50, 0), -50],
+                            '17-Attack 3': ['26-Attack 3', False, 1300, pygame.Vector2(50, -10), -50],
+                            '18-Air Attack 1': ['27-Air Attack 1', True, 500, pygame.Vector2(24, 48), -30],
+                            '19-Air Attack 2': ['28-Air Attack 2', True, 500, pygame.Vector2(40, 30), -60]}
 
     def import_character_assets(self):
         sword_effects_path = './graphics/character/Sword Effects/'
@@ -90,9 +90,6 @@ class Player(pygame.sprite.Sprite):
         create_masks(self.animations, self.mask_animations_right, self.mask_animations_left,
                      exclude_masks=['09-Idle Sword', '10-Run Sword', '11-Jump Sword', '12-Fall Sword',
                                     '13-Ground Sword', '14-Hit Sword'])
-
-    def import_dust_run_particles(self):
-        self.dust_run_particles = import_folder("./graphics/character/dust_particles/run")
 
     def animate(self):
         self.set_animation_speed()
@@ -264,14 +261,12 @@ class Player(pygame.sprite.Sprite):
                                      facing=self.facing_right,
                                      right_mask=self.mask_sword_effects_right[attack[0]],
                                      left_mask=self.mask_sword_effects_left[attack[0]],
-                                     offset=attack[3], type=attack[0]))
+                                     offset=attack[3], type=attack[0], damage=attack[4]))
 
     def apply_gravity(self):
         if self.jump:
             self.direction.y += self.jump_speed
-            if self.direction.y <= -7 and not self.rebound:
-                self.jump = False
-            elif self.direction.y <= -9:
+            if self.direction.y <= -7:
                 self.jump = self.rebound = False
         else:
             self.direction.y += self.gravity
