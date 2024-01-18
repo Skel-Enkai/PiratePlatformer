@@ -1,12 +1,13 @@
 import pygame.sprite
 
 from data.game_data import *
-from data.support import import_csv_layout, import_cut_graphic
+from data.support import import_csv_layout, import_cut_graphic, find_vector_from_two_points
+from game.player import Player
 from levels.decoration import *
 from levels.enemy import FierceTooth, Crabby
 from levels.particles import Effect
-from levels.player import Player
 from levels.tiles import *
+from levels.traps import Cannon
 from levels.treasure import *
 
 
@@ -46,11 +47,12 @@ class Level:
         self.world_offset = pygame.Vector2(0, 0)
 
         # level dict
+        self.projectiles = pygame.sprite.Group()
         self.level_sprites = {'terrain': pygame.sprite.Group(), 'terrain_collidable': pygame.sprite.Group(),
                               'grass': pygame.sprite.Group(), 'crates': pygame.sprite.Group(),
                               'treasure': pygame.sprite.Group(), 'fg palms': pygame.sprite.Group(),
                               'bg palms': pygame.sprite.Group(), 'enemies': pygame.sprite.Group(),
-                              'constraints': pygame.sprite.Group()}
+                              'constraints': pygame.sprite.Group(), 'traps': pygame.sprite.Group()}
 
         for key in level_data.keys():
             if key not in ('node_pos', 'unlock', 'node_graphics', 'player'):
@@ -69,6 +71,11 @@ class Level:
         # dust
         self.dust_sprite = pygame.sprite.GroupSingle()
         self.player_on_ground = True
+
+        # traps
+        self.traps_timer = pygame.event.custom_type()
+        if self.level_sprites['traps']:
+            pygame.time.set_timer(self.traps_timer, 3000, loops=0)
 
     def create_tile_group(self, layout, type):
         sprite_group = pygame.sprite.Group()
@@ -129,6 +136,12 @@ class Level:
 
                         case 'constraints':
                             sprite = Tile(tile_size, x, y)
+
+                        case 'traps':
+                            if val == '0':
+                                sprite = Cannon(x, y, self.display_surface, self.projectiles, False)
+                            elif val == '1':
+                                sprite = Cannon(x, y, self.display_surface, self.projectiles, True)
 
                     try:
                         sprite_group.add(sprite)
@@ -331,7 +344,7 @@ class Level:
                 if collided.identifier != enemy.identifier:
                     enemy.constraints.append(collided)
 
-    def check_death(self):
+    def check_outofbounds_death(self):
         if self.player.sprite.rect.y > screen_height + 400:
             self.change_cur_health(-100)
             self.create_overworld()
@@ -394,6 +407,20 @@ class Level:
                 if not player.knockback:
                     self.check_enemy_attack_hits(enemy, player)
 
+    def check_projectile_collisions(self):
+        collided = pygame.sprite.spritecollide(self.player.sprite, self.projectiles, False,
+                                               collided=pygame.sprite.collide_mask)
+        if collided:
+            for projectile in collided:
+                if not projectile.exploded:
+                    # this is just for cannonballs for now
+                    self.change_cur_health(-80)
+                    vector = find_vector_from_two_points(projectile.rect.center, self.player.sprite.rect.center,
+                                                         5)
+                    self.player.sprite.direction = pygame.Vector2(0, 0)
+                    self.player.sprite.knockback_init(vector, rebound=True)
+                    projectile.explode()
+
     def draw(self):
         self.sky.draw(self.display_surface)
         self.cloud.draw(self.display_surface, self.world_shift)
@@ -402,9 +429,11 @@ class Level:
         self.level_sprites['grass'].draw(self.display_surface)
         self.level_sprites['crates'].draw(self.display_surface)
         self.level_sprites['treasure'].draw(self.display_surface)
+        self.level_sprites['traps'].draw(self.display_surface)
         self.level_sprites['enemies'].draw(self.display_surface)
         self.dust_sprite.draw(self.display_surface)
         self.player.draw(self.display_surface)
+        self.projectiles.draw(self.display_surface)
         self.level_sprites['fg palms'].draw(self.display_surface)
         self.goal.draw(self.display_surface)
         # updates and draws together, could split for threading
@@ -446,6 +475,8 @@ class Level:
         self.level_sprites['treasure'].update(self.world_shift)
         self.level_sprites['constraints'].update(self.world_shift)
         self.level_sprites['enemies'].update(self.world_shift)
+        self.level_sprites['traps'].update(self.world_shift)
+        self.projectiles.update(self.world_shift)
         self.enemy_collision_boundary()
         self.level_sprites['fg palms'].update(self.world_shift)
         self.goal.update(self.world_shift)
@@ -459,10 +490,12 @@ class Level:
         self.horizontal_movement_collision()
         self.player.sprite.rect.center = self.player.sprite.collide_rect.center
         # checks
-        self.check_death()
+        self.check_outofbounds_death()
         self.check_win()
-        self.check_enemy_collisions(joystick)
-        self.check_treasure_collide()
+        if not self.player.sprite.dead:
+            self.check_enemy_collisions(joystick)
+            self.check_projectile_collisions()
+            self.check_treasure_collide()
 
     def run(self, joystick, controller):
         self.draw()

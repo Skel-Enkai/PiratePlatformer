@@ -1,6 +1,6 @@
 import pygame.sprite
 
-from data.support import import_loop, create_masks
+from data.support import import_character_assets
 from levels.particles import AttackEffect
 
 
@@ -30,7 +30,9 @@ class Enemy(pygame.sprite.Sprite):
         self.attack_effect = pygame.sprite.GroupSingle()
 
         self.animations = {}
-        self.import_character_assets(path)
+        self.masks_left = {}
+        self.masks_right = {}
+        import_character_assets(path, self.animations, self.masks_left, self.masks_right)
         self.display_surface = display_surface
 
         # status
@@ -44,13 +46,6 @@ class Enemy(pygame.sprite.Sprite):
         # image
         self.image = self.animations['01-Idle'][0]
         self.rect = self.image.get_rect(topleft=(x, y))
-
-    def import_character_assets(self, path):
-        character_path = path
-        import_loop(character_path, self.animations)
-        self.masks_left = {}
-        self.masks_right = {}
-        create_masks(self.animations, self.masks_right, self.masks_left)
 
     def should_reset_status(self):
         if self.status in self.should_reset:
@@ -97,8 +92,7 @@ class Enemy(pygame.sprite.Sprite):
 
     def move(self, world_shift):
         self.rect.x += int(self.direction.x * self.speed)
-        self.rect.x += world_shift.x
-        self.rect.y += world_shift.y
+        self.rect.center += world_shift
         self.collide_rect.center = self.rect.center
 
     def damage(self, amount):
@@ -171,7 +165,7 @@ class FierceTooth(Enemy):
         if self.speed > 0:
             rect_xdifference = self.rect.centerx - self.player.sprite.rect.centerx
             rect_ydifference = self.rect.centery - self.player.sprite.rect.centery
-            if abs(rect_ydifference) <= 60:
+            if abs(rect_ydifference) <= 60 and self.player.sprite.status != 'DEAD-WAIT':
                 if abs(rect_xdifference) >= 300:
                     self.direction.x = 0
                 elif abs(rect_xdifference) <= 90 and ((self.facing_right and rect_xdifference < 0) or
@@ -207,7 +201,7 @@ class Crabby(Enemy):
         if self.speed > 0:
             rect_xdifference = self.rect.centerx - self.player.sprite.rect.centerx
             rect_ydifference = self.rect.centery - self.player.sprite.rect.centery
-            if abs(rect_ydifference) <= 60:
+            if abs(rect_ydifference) <= 60 and self.player.sprite.status != 'DEAD-WAIT':
                 if abs(rect_xdifference) >= 300:
                     self.direction.x = 0
                 elif (130 >= abs(rect_xdifference) >= 90 and ((self.facing_right and rect_xdifference < 0) or

@@ -15,30 +15,6 @@ level_0 = {
 
 
 level_1 = {
-    # 'terrain': './levels/1/lamar_terrain.csv',
-    # 'treasure': './levels/1/lamar_coins.csv',
-    # 'fg palms': './levels/1/lamar_fg_palms.csv',
-    # 'bg palms': './levels/1/lamar_bg_palms.csv',
-    # 'crates': './levels/1/lamar_crates.csv',
-    # 'enemies': './levels/1/lamar_enemies.csv',
-    # 'constraints': './levels/1/lamar_constraints.csv',
-    # 'player': './levels/1/lamar_player.csv',
-    # 'grass': './levels/1/lamar_grass.csv',
-    'terrain': './levels/3/level_3_terrain.csv',
-    'treasure': './levels/3/level_3_coins.csv',
-    'fg palms': './levels/3/level_3_fg_palms.csv',
-    'bg palms': './levels/3/level_3_bg_palms.csv',
-    'crates': './levels/3/level_3_crates.csv',
-    'enemies': './levels/3/level_3_enemies.csv',
-    'constraints': './levels/3/level_3_constraints.csv',
-    'player': './levels/3/level_3_player.csv',
-    'grass': './levels/3/level_3_grass.csv',
-    'node_pos': (300, 220),
-    'unlock': 2,
-    'node_graphics': './graphics/overworld/1'
-}
-
-level_2 = {
     'terrain': './levels/2/level_2_terrain.csv',
     'treasure': './levels/2/level_2_coins.csv',
     'fg palms': './levels/2/level_2_fg_palms.csv',
@@ -48,50 +24,58 @@ level_2 = {
     'constraints': './levels/2/level_2_constraints.csv',
     'player': './levels/2/level_2_player.csv',
     'grass': './levels/2/level_2_grass.csv',
+    'traps': './levels/2/level_2_traps.csv',
+    'node_pos': (300, 220),
+    'unlock': 2,
+    'node_graphics': './graphics/overworld/1'
+}
+
+level_2 = {
+    'terrain': './levels/3/level_3_terrain.csv',
+    'treasure': './levels/3/level_3_coins.csv',
+    'fg palms': './levels/3/level_3_fg_palms.csv',
+    'bg palms': './levels/3/level_3_bg_palms.csv',
+    'crates': './levels/3/level_3_crates.csv',
+    'enemies': './levels/3/level_3_enemies.csv',
+    'constraints': './levels/3/level_3_constraints.csv',
+    'player': './levels/3/level_3_player.csv',
+    'grass': './levels/3/level_3_grass.csv',
     'node_pos': (480, 610),
     'unlock': 3,
     'node_graphics': './graphics/overworld/2'
 }
 
 level_3 = {
-    'terrain': './levels/3/level_3_terrain.csv',
-    'treasure': './levels/3/level_3_coins.csv',
-    'fg palms': './levels/3/level_3_fg_palms.csv',
-    'bg palms': './levels/3/level_3_bg_palms.csv',
-    'crates': './levels/3/level_3_crates.csv',
-    'enemies': './levels/3/level_3_enemies.csv',
-    'constraints': './levels/3/level_3_constraints.csv',
-    'player': './levels/3/level_3_player.csv',
-    'grass': './levels/3/level_3_grass.csv',
+    'terrain': './levels/4/level_4_terrain.csv',
+    'traps': './levels/4/level_4_traps.csv',
+    'treasure': './levels/4/level_4_coins.csv',
+    'fg palms': './levels/4/level_4_fg_palms.csv',
+    'bg palms': './levels/4/level_4_bg_palms.csv',
+    'crates': './levels/4/level_4_crates.csv',
+    'player': './levels/4/level_4_player.csv',
+    'grass': './levels/4/level_4_grass.csv',
     'node_pos': (610, 350),
     'unlock': 4,
     'node_graphics': './graphics/overworld/3'
 }
 level_4 = {
-    'terrain': './levels/test/test_level_terrain.csv',
-    # 'treasure': './levels/3/level_3_coins.csv',
-    # 'fg palms': './levels/3/level_3_fg_palms.csv',
-    # 'bg palms': './levels/3/level_3_bg_palms.csv',
-    # 'crates': './levels/3/level_3_crates.csv',
-    # 'enemies': './levels/3/level_3_enemies.csv',
-    # 'constraints': './levels/3/level_3_constraints.csv',
-    'player': './levels/test/test_level_player.csv',
-    # 'grass': './levels/3/level_3_grass.csv',
+    'terrain': './levels/4/level_4_terrain.csv',
+    'traps': './levels/4/level_4_traps.csv',
+    'treasure': './levels/4/level_4_coins.csv',
+    'fg palms': './levels/4/level_4_fg_palms.csv',
+    'bg palms': './levels/4/level_4_bg_palms.csv',
+    'crates': './levels/4/level_4_crates.csv',
+    'player': './levels/4/level_4_player.csv',
+    'grass': './levels/4/level_4_grass.csv',
     'node_pos': (880, 210),
     'unlock': 5,
     'node_graphics': './graphics/overworld/4'
 }
 
 level_5 = {
-    'terrain': './levels/3/level_3_terrain.csv',
-    'treasure': './levels/3/level_3_coins.csv',
-    'fg palms': './levels/3/level_3_fg_palms.csv',
-    'bg palms': './levels/3/level_3_bg_palms.csv',
-    'crates': './levels/3/level_3_crates.csv',
-    'enemies': './levels/3/level_3_enemies.csv',
-    'constraints': './levels/3/level_3_constraints.csv',
-    'player': './levels/3/level_3_player.csv',
-    'grass': './levels/3/level_3_grass.csv',
+    'terrain': './levels/test/test_level_terrain.csv',
+    'traps': './levels/test/test_level_traps.csv',
+    'player': './levels/test/test_level_player.csv',
     'node_pos': (1050, 400),
     'unlock': 5,
     'node_graphics': './graphics/overworld/5'

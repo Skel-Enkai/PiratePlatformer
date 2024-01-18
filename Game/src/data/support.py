@@ -66,6 +66,19 @@ def create_masks_list(animation_list, mask_list):
         mask_list.append(pygame.mask.from_surface(frame))
 
 
+def import_character_assets(path, animations_dict, masks_left, masks_right):
+    character_path = path
+    import_loop(character_path, animations_dict)
+    create_masks(animations_dict, masks_right, masks_left)
+
+
+def flipx_dictionary(dictionary):
+    for key in dictionary.keys():
+        for index, frame in enumerate(dictionary[key]):
+            dictionary[key][index] = pygame.transform.flip(frame, True, False)
+    return dictionary
+
+
 def import_csv_layout(path):
     terrain_map = []
     with open(find_files(path)) as map:
@@ -90,3 +103,12 @@ def import_cut_graphic(path):
             cut_tiles.append(new_surf)
 
     return cut_tiles
+
+
+# PHYSICS
+# Direction A->B
+def find_vector_from_two_points(point_a, point_b, magnitude):
+    x_diff = point_b[0] - point_a[0]
+    y_diff = point_b[1] - point_a[1]
+    rect_vector = pygame.Vector2(x_diff, y_diff)
+    return rect_vector.normalize() * magnitude

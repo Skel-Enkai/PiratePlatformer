@@ -31,7 +31,7 @@ pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.JOYDEVICEADDED, py
 
 async def main():
     # debug
-    counter_1 = 0
+    # counter_1 = 0
     joysticks = [None]
     current_controller = 0
     while True:
@@ -54,6 +54,10 @@ async def main():
 
             elif game.level and event.type == game.level.player.sprite.attack_timer:
                 game.level.player.sprite.can_attack = True
+
+            elif game.level and event.type == game.level.traps_timer:
+                for trap in game.level.level_sprites['traps']:
+                    trap.fire()
 
             elif event.type == pygame.JOYDEVICEADDED or event.type == pygame.JOYDEVICEREMOVED:
                 number_joys = pygame.joystick.get_count()

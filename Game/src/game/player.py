@@ -121,7 +121,12 @@ class Player(pygame.sprite.Sprite):
         if self.status == '07-Dead Hit':
             self.status = '08-Dead Ground'
         elif self.status == '08-Dead Ground':
-            self.create_overworld()
+            self.dead_wait_counter = 0
+            self.status = 'DEAD-WAIT'
+        elif self.status == 'DEAD-WAIT':
+            self.dead_wait_counter += 1
+            if self.dead_wait_counter > 10:
+                self.create_overworld()
         elif self.should_reset_status():
             self.knockback = False
             self.status = 'None'
@@ -129,7 +134,7 @@ class Player(pygame.sprite.Sprite):
 
     def should_reset_status(self):
         should_reset = ['14-Hit Sword', '15-Attack 1', '16-Attack 2', '17-Attack 3', '18-Air Attack 1',
-                        '19-Air Attack 2', '07-Dead Hit', '08-Dead Ground']
+                        '19-Air Attack 2', '07-Dead Hit', '08-Dead Ground', 'DEAD-WAIT']
         if self.status in should_reset:
             return True
         return False
@@ -149,11 +154,15 @@ class Player(pygame.sprite.Sprite):
             if self.status != current:
                 self.can_move = True
 
-    def knockback_init(self):
+    def knockback_init(self, vector_push=None, rebound=False):
         self.frame_index = 0
         self.can_move = self.jump = self.rebound = False
         self.knockback = True
         self.status = '14-Hit Sword'
+        if rebound:
+            self.rebound = True
+        if vector_push:
+            self.direction += vector_push
 
     def die(self):
         if not self.dead:

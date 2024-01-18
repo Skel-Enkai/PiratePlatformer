@@ -110,6 +110,13 @@ class Game:
                     self.level.effects_channel.set_volume(0.2)
                     self.level.player.sprite.channel.set_volume(0.2)
 
+        # debugging command
+        if (keys[pygame.K_PERIOD] and keys[pygame.K_1]) and not self.input_wait:
+            pygame.time.set_timer(self.menu_wait, 600)
+            self.input_wait = True
+            self.max_level = 5
+            self.overworld = Overworld(self.screen_surface, self.create_level, 4, self.max_level)
+
     def run(self, joystick=None):
         self.check_menu(joystick)
         if self.status == 'overworld':
