@@ -13,7 +13,7 @@ class Game:
         self.input_wait = False
         self.level = None
         self.current_level = 0
-        # change to control access of starting levels
+        # change to control access of starting level_data
         self.max_level = 0
         self.max_health = 100
         self.cur_health = 100
