@@ -34,16 +34,15 @@ class Player(pygame.sprite.Sprite):
         self.status = '09-Idle Sword'
         self.facing_right = True
         self.on_ground = True
-        self.on_ceiling = False
-        self.on_left = False
-        self.on_right = False
         self.rebound = False
         self.knockback = False
         self.can_move = True
         self.dead = False
+        self.ground_impact = False
 
         # timers
         self.can_attack = True
+        self.can_air_attack = True
         self.attack_timer = pygame.event.custom_type()
         self.create_overworld = create_overworld
 
@@ -65,11 +64,11 @@ class Player(pygame.sprite.Sprite):
         self.hit_sound = pygame.mixer.Sound(find_files('./audio/effects/hit.wav'))
 
         # attack data
-        self.attack_data = {'15-Attack 1': ['24-Attack 1', False, 1300, pygame.Vector2(72, 2), -40],
-                            '16-Attack 2': ['25-Attack 2', False, 1300, pygame.Vector2(50, 0), -50],
-                            '17-Attack 3': ['26-Attack 3', False, 1300, pygame.Vector2(50, -10), -50],
-                            '18-Air Attack 1': ['27-Air Attack 1', True, 500, pygame.Vector2(24, 48), -30],
-                            '19-Air Attack 2': ['28-Air Attack 2', True, 500, pygame.Vector2(40, 30), -60]}
+        self.attack_data = {'15-Attack 1': ['24-Attack 1', False, 1200, pygame.Vector2(72, 2), -40],
+                            '16-Attack 2': ['25-Attack 2', False, 1200, pygame.Vector2(50, 0), -50],
+                            '17-Attack 3': ['26-Attack 3', False, 1200, pygame.Vector2(50, -10), -50],
+                            '18-Air Attack 1': ['27-Air Attack 1', True, None, pygame.Vector2(24, 48), -40],
+                            '19-Air Attack 2': ['28-Air Attack 2', True, None, pygame.Vector2(40, 30), -70]}
 
     def import_character_assets(self):
         sword_effects_path = './graphics/character/Sword Effects/'
@@ -172,6 +171,7 @@ class Player(pygame.sprite.Sprite):
             self.dead = True
 
     def dust_animate(self):
+        # rewrite so can be drawn in levels to allow for proper layering.
         if self.status == '10-Run Sword' and self.on_ground:
             self.dust_frame_index += self.dust_animations_speed
             if self.dust_frame_index >= len(self.dust_run_particles):
@@ -214,17 +214,19 @@ class Player(pygame.sprite.Sprite):
                     self.direction.y = -4
                     self.jump = False
             # attacks
-            if self.can_attack:
-                if keys[pygame.K_q] and self.on_ground:
+            if self.can_attack and self.on_ground:
+                if keys[pygame.K_q]:
                     self.initiate_attack('15-Attack 1')
-                elif keys[pygame.K_q] and not self.on_ground:
-                    self.initiate_attack('18-Air Attack 1')
-                elif keys[pygame.K_e] and self.on_ground:
+                elif keys[pygame.K_e]:
                     self.initiate_attack('16-Attack 2')
-                elif keys[pygame.K_e] and not self.on_ground:
-                    self.initiate_attack('19-Air Attack 2')
-                elif keys[pygame.K_r] and self.on_ground:
+                elif keys[pygame.K_r]:
                     self.initiate_attack('17-Attack 3')
+
+            elif self.can_air_attack and not self.on_ground:
+                if keys[pygame.K_q]:
+                    self.initiate_attack('18-Air Attack 1', True)
+                elif keys[pygame.K_e]:
+                    self.initiate_attack('19-Air Attack 2', True)
 
     def joystick_input(self, joystick):
         controller = controllers[joystick.get_name()]
@@ -247,25 +249,31 @@ class Player(pygame.sprite.Sprite):
                     self.direction.y = -4
                     self.jump = False
             # attacks
-            if self.can_attack:
-                if joystick.get_button(controller['square']) and self.on_ground:
+            if self.can_attack and self.on_ground:
+                if joystick.get_button(controller['square']):
                     self.initiate_attack('15-Attack 1')
-                if joystick.get_button(controller['square']) and not self.on_ground:
-                    self.initiate_attack('18-Air Attack 1')
-                elif joystick.get_button(controller['triangle']) and self.on_ground:
+                elif joystick.get_button(controller['triangle']):
                     self.initiate_attack('16-Attack 2')
-                elif joystick.get_button(controller['triangle']) and not self.on_ground:
-                    self.initiate_attack('19-Air Attack 2')
-                elif joystick.get_button(controller['circle']) and self.on_ground:
+                elif joystick.get_button(controller['circle']):
                     self.initiate_attack('17-Attack 3')
 
-    def initiate_attack(self, status):
+            elif self.can_air_attack and not self.on_ground:
+                if joystick.get_button(controller['square']):
+                    self.initiate_attack('18-Air Attack 1', True)
+                elif joystick.get_button(controller['triangle']):
+                    self.initiate_attack('19-Air Attack 2', True)
+
+    def initiate_attack(self, status, air=False):
         self.status = status
         attack = self.attack_data[status]
-        self.can_attack = False
         self.can_move = attack[1]
         self.frame_index = 0
-        pygame.time.set_timer(self.attack_timer, attack[2])
+        if not air:
+            self.can_attack = False
+            pygame.time.set_timer(self.attack_timer, attack[2])
+        else:
+            self.can_air_attack = False
+
         self.attack.add(AttackEffect(self, self.sword_effects[attack[0]], should_flip=not self.facing_right,
                                      facing=self.facing_right,
                                      right_mask=self.mask_sword_effects_right[attack[0]],

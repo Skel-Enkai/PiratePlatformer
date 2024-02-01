@@ -31,6 +31,20 @@ level_1 = {
 }
 
 level_2 = {
+    'terrain': './level_data/4/level_4_terrain.csv',
+    'traps': './level_data/4/level_4_traps.csv',
+    'treasure': './level_data/4/level_4_coins.csv',
+    'fg palms': './level_data/4/level_4_fg_palms.csv',
+    'bg palms': './level_data/4/level_4_bg_palms.csv',
+    'crates': './level_data/4/level_4_crates.csv',
+    'player': './level_data/4/level_4_player.csv',
+    'grass': './level_data/4/level_4_grass.csv',
+    'node_pos': (480, 610),
+    'unlock': 3,
+    'node_graphics': './graphics/overworld/2'
+}
+
+level_3 = {
     'terrain': './level_data/3/level_3_terrain.csv',
     'treasure': './level_data/3/level_3_coins.csv',
     'fg palms': './level_data/3/level_3_fg_palms.csv',
@@ -40,20 +54,6 @@ level_2 = {
     'constraints': './level_data/3/level_3_constraints.csv',
     'player': './level_data/3/level_3_player.csv',
     'grass': './level_data/3/level_3_grass.csv',
-    'node_pos': (480, 610),
-    'unlock': 3,
-    'node_graphics': './graphics/overworld/2'
-}
-
-level_3 = {
-    'terrain': './level_data/4/level_4_terrain.csv',
-    'traps': './level_data/4/level_4_traps.csv',
-    'treasure': './level_data/4/level_4_coins.csv',
-    'fg palms': './level_data/4/level_4_fg_palms.csv',
-    'bg palms': './level_data/4/level_4_bg_palms.csv',
-    'crates': './level_data/4/level_4_crates.csv',
-    'player': './level_data/4/level_4_player.csv',
-    'grass': './level_data/4/level_4_grass.csv',
     'node_pos': (610, 350),
     'unlock': 4,
     'node_graphics': './graphics/overworld/3'
@@ -73,9 +73,14 @@ level_4 = {
 }
 
 level_5 = {
-    'terrain': './level_data/test/test_level_terrain.csv',
-    'traps': './level_data/test/test_level_traps.csv',
-    'player': './level/test/test_level_player.csv',
+    'terrain': './level_data/4/level_4_terrain.csv',
+    'traps': './level_data/4/level_4_traps.csv',
+    'treasure': './level_data/4/level_4_coins.csv',
+    'fg palms': './level_data/4/level_4_fg_palms.csv',
+    'bg palms': './level_data/4/level_4_bg_palms.csv',
+    'crates': './level_data/4/level_4_crates.csv',
+    'player': './level_data/4/level_4_player.csv',
+    'grass': './level_data/4/level_4_grass.csv',
     'node_pos': (1050, 400),
     'unlock': 5,
     'node_graphics': './graphics/overworld/5'

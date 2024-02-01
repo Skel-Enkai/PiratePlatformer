@@ -46,6 +46,9 @@ class Level:
         self.world_shift = pygame.Vector2(0, 0)
         self.world_offset = pygame.Vector2(0, 0)
 
+        # dust
+        self.particle_effects = pygame.sprite.Group()
+
         # level dict
         self.projectiles = pygame.sprite.Group()
         self.level_sprites = {'terrain': pygame.sprite.Group(), 'terrain_collidable': pygame.sprite.Group(),
@@ -67,10 +70,6 @@ class Level:
         self.sky = Sky(7)
         self.water = Water(screen_height - 40, self.world_length, 0.06)
         self.cloud = Clouds(7, self.world_length, randint(2, 14))
-
-        # dust
-        self.dust_sprite = pygame.sprite.GroupSingle()
-        self.player_on_ground = True
 
         # traps
         self.traps_timer = pygame.event.custom_type()
@@ -139,9 +138,9 @@ class Level:
 
                         case 'traps':
                             if val == '0':
-                                sprite = Cannon(x, y, self.display_surface, self.projectiles, False)
+                                sprite = Cannon(x, y, self.projectiles, self.particle_effects, False)
                             elif val == '1':
-                                sprite = Cannon(x, y, self.display_surface, self.projectiles, True)
+                                sprite = Cannon(x, y, self.projectiles, self.particle_effects, True)
 
                     try:
                         sprite_group.add(sprite)
@@ -183,20 +182,15 @@ class Level:
         self.world_offset = self.initial_offset
 
     def create_jump_particles(self, pos):
-        jump_particle_sprite = Effect(pos, 'jump')
-        self.dust_sprite.add(jump_particle_sprite)
-
-    def get_player_on_ground(self):
-        if self.player.sprite.on_ground:
-            self.player_on_ground = True
-        else:
-            self.player_on_ground = False
+        jump_particle_sprite = Effect(pos, "./graphics/character/dust_particles/jump", player_effect=True)
+        self.particle_effects.add(jump_particle_sprite)
 
     def create_landing_dust(self):
-        if not self.player_on_ground and self.player.sprite.on_ground and not self.dust_sprite.sprites():
+        if self.player.sprite.ground_impact:
             pos = self.player.sprite.collide_rect.midbottom
-            fall_dust_particle = Effect(pos, 'land')
-            self.dust_sprite.add(fall_dust_particle)
+            fall_dust_particle = Effect(pos, "./graphics/character/dust_particles/land", player_effect=True)
+            self.particle_effects.add(fall_dust_particle)
+            self.player.sprite.ground_impact = False
 
     def update_world_shift(self):
         self.scroll_x()
@@ -258,27 +252,15 @@ class Level:
 
                 if player.direction.x > 0 and player.collide_rect.centerx < sprite.hitbox_rect.centerx:
                     player.collide_rect.right = sprite.hitbox_rect.left
-                    player.on_right = True
                     self.player_current_x = player.collide_rect.right
 
                 elif player.direction.x < 0 and player.collide_rect.centerx > sprite.hitbox_rect.centerx:
                     player.collide_rect.left = sprite.hitbox_rect.right
-                    player.on_left = True
                     self.player_current_x = player.collide_rect.left
-
-        self.set_horizontal_flags(player, self.player_current_x)
-
-    @staticmethod
-    def set_horizontal_flags(player, current_x):
-        if player.on_left and (player.collide_rect.left < current_x or player.direction.x >= 0):
-            player.on_left = False
-        if player.on_right and (player.collide_rect.right > current_x or player.direction.x <= 0):
-            player.on_right = False
 
     def vertical_movement_collision(self):
         player = self.player.sprite
         player.apply_gravity()
-        self.get_player_on_ground()
 
         for sprite in self.level_sprites['crates'].sprites():
             if sprite.hitbox_rect.inflate(-20, 0).colliderect(player.collide_rect):
@@ -297,7 +279,7 @@ class Level:
                 self.downwards_collision(player, sprite.rect)
 
         self.create_landing_dust()
-        self.set_vertical_flags(player)
+        self.check_player_on_ground(player)
 
     @staticmethod
     def check_downwards(player, sprite):
@@ -305,9 +287,12 @@ class Level:
 
     @staticmethod
     def downwards_collision(player, hitbox):
+        if player.direction.y > 5:
+            player.ground_impact = True
         player.collide_rect.bottom = hitbox.top
         player.direction.y = 0
         player.on_ground = True
+        player.can_air_attack = True
 
     @staticmethod
     def check_upwards(player, sprite):
@@ -317,14 +302,11 @@ class Level:
     def upwards_collision(player, hitbox):
         player.collide_rect.top = hitbox.bottom
         player.direction.y = 1.0
-        player.on_ceiling = True
 
     @staticmethod
-    def set_vertical_flags(player):
-        if player.on_ground and player.direction.y < 0 or player.direction.y > 1:
+    def check_player_on_ground(player):
+        if player.direction.y < 0 or player.direction.y > 1:
             player.on_ground = False
-        if player.on_ceiling and player.direction.y > 0 or player.direction.y < 1:
-            player.on_ceiling = False
 
     def enemy_collision_boundary(self):
         enemy_sprites = self.level_sprites['enemies']
@@ -406,6 +388,9 @@ class Level:
                     self.check_player_attack_hits(player, enemy)
                 if not player.knockback:
                     self.check_enemy_attack_hits(enemy, player)
+        for enemy in self.level_sprites['traps']:
+            if not enemy.destroyed:
+                self.check_player_attack_hits(player, enemy)
 
     def check_projectile_collisions(self):
         collided = pygame.sprite.spritecollide(self.player.sprite, self.projectiles, False,
@@ -431,7 +416,7 @@ class Level:
         self.level_sprites['treasure'].draw(self.display_surface)
         self.level_sprites['traps'].draw(self.display_surface)
         self.level_sprites['enemies'].draw(self.display_surface)
-        self.dust_sprite.draw(self.display_surface)
+        self.particle_effects.draw(self.display_surface)
         self.player.draw(self.display_surface)
         self.projectiles.draw(self.display_surface)
         self.level_sprites['fg palms'].draw(self.display_surface)
@@ -480,7 +465,7 @@ class Level:
         self.enemy_collision_boundary()
         self.level_sprites['fg palms'].update(self.world_shift)
         self.goal.update(self.world_shift)
-        self.dust_sprite.update(self.world_shift)
+        self.particle_effects.update(self.world_shift)
 
     def update(self, joystick, controller):
         self.update_scene()

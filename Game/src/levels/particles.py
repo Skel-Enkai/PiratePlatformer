@@ -4,29 +4,29 @@ from data.support import import_folder
 
 
 class Effect(pygame.sprite.Sprite):
-    def __init__(self, pos, type, animation_speed=0.4, enemy_speed=-1):
+    def __init__(self, pos, frames_object, animation_speed=0.4, player_effect=False):
         super().__init__()
         self.frame_index = 0
         self.animation_speed = animation_speed
-        self.enemy_speed = enemy_speed
-        if type == 'jump':
-            self.frames = import_folder("./graphics/character/dust_particles/jump")
-        elif type == 'land':
-            self.frames = import_folder("./graphics/character/dust_particles/land")
+        if isinstance(frames_object, str):
+            self.frames = import_folder(frames_object)
+        else:
+            self.frames = frames_object
         self.image = self.frames[self.frame_index]
-        self.rect = self.image.get_rect(midbottom=pos)
+        if player_effect:
+            self.rect = self.image.get_rect(midbottom=pos)
+        else:
+            self.rect = self.image.get_rect(center=pos)
 
-    def animate(self, should_flip=None):
+    def animate(self):
         self.frame_index += self.animation_speed
         if self.frame_index >= len(self.frames):
             self.kill()
         else:
             self.image = self.frames[int(self.frame_index)]
-            if should_flip > 0:
-                self.image = pygame.transform.flip(self.image, True, False)
 
     def update(self, world_shift):
-        self.animate(should_flip=self.enemy_speed)
+        self.animate()
         self.rect.center += world_shift
 
 
