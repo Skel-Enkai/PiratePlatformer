@@ -417,7 +417,12 @@ class Level:
         self.level_sprites['traps'].draw(self.display_surface)
         self.level_sprites['enemies'].draw(self.display_surface)
         self.particle_effects.draw(self.display_surface)
+        # draws the player and it's elements {
         self.player.draw(self.display_surface)
+        if self.player.sprite.attack:
+            self.player.sprite.attack.draw(self.display_surface)
+        self.player.sprite.dust_animate()
+        # }
         self.projectiles.draw(self.display_surface)
         self.level_sprites['fg palms'].draw(self.display_surface)
         self.goal.draw(self.display_surface)

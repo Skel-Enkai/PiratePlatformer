@@ -42,6 +42,8 @@ async def main():
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
+                    if game.status != "level":
+                        game.pickle_state()
                     pygame.quit()
                     sys.exit()
                 game.controller = False

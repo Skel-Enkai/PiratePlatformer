@@ -1,6 +1,8 @@
+import pickle
+
 import pygame.time
 
-from data.settings import controllers
+from data.settings import controllers, saveState
 from data.support import find_files
 from game.overworld import Overworld
 from game.ui import UI
@@ -9,15 +11,15 @@ from levels.level import Level
 
 class Game:
     def __init__(self, surface):
-        # game attributes
         self.input_wait = False
         self.level = None
-        self.current_level = 0
-        # change to control access of starting level_data
-        self.max_level = 0
-        self.max_health = 100
-        self.cur_health = 100
-        self.coins = 0
+
+        # trys to load save file and creates one if none exists
+        try:
+            with open('save.pkl', 'rb') as file:
+                self.state = pickle.load(file)
+        except FileNotFoundError:
+            self.state = saveState()
 
         # misc
         self.screen_surface = surface
@@ -38,16 +40,16 @@ class Game:
         self.menu_wait = pygame.event.custom_type()
 
         # overworld creation
-        self.overworld = Overworld(self.screen_surface, self.create_level, 0, self.max_level)
+        self.overworld = Overworld(self.screen_surface, self.create_level, self.state)
         self.status = 'overworld'
         self.switch_overworld = pygame.event.custom_type()
         pygame.time.set_timer(self.switch_overworld, 600)
         self.music.play(self.overworld_music, loops=-1)
 
-    def create_level(self, current_level):
-        self.current_level = current_level
-        self.level = Level(current_level, self.screen_surface, self.create_overworld,
+    def create_level(self):
+        self.level = Level(self.state.current_level, self.screen_surface, self.create_overworld,
                            self.change_coins, self.change_cur_health, self.mute_flag)
+        self.pickle_state()
         self.status = 'level'
         self.music.play(self.level_music, loops=-1)
         if self.mute_flag:
@@ -55,34 +57,42 @@ class Game:
 
     def create_overworld(self, new_max_level=0):
         self.check_death()
-        if new_max_level > self.max_level:
-            self.max_level = new_max_level
-        self.overworld = Overworld(self.screen_surface, self.create_level, self.current_level, self.max_level)
+        if new_max_level > self.state.max_level:
+            self.state.max_level = new_max_level
+
+        # create overworld and store game state in pickle
+        self.overworld = Overworld(self.screen_surface, self.create_level, self.state)
+        self.pickle_state()
+
         self.status = 'overworld'
         pygame.time.set_timer(self.switch_overworld, 1200)
         self.music.play(self.overworld_music, loops=-1)
         if self.mute_flag:
             pygame.mixer.pause()
 
+    def pickle_state(self):
+        with open('save.pkl', 'wb') as file:
+            pickle.dump(self.state, file)
+
     def check_death(self):
-        if self.cur_health <= 0:
-            self.cur_health = 100
-            self.coins = 0
+        if self.state.cur_health <= 0:
+            self.state.cur_health = 100
+            self.state.coins = 0
             # self.max_level = 0 // uncomment for perma death
             # self.current_level = 0 // uncomment for perma death
 
     def change_coins(self, amount):
-        self.coins += amount
+        self.state.coins += amount
 
     def change_cur_health(self, amount):
-        self.cur_health += amount
+        self.state.cur_health += amount
         if amount < 0:
             self.channel_effects.play(self.hit_sound)
-        elif self.cur_health > 100:
-            self.cur_health = 100
+        elif self.state.cur_health > 100:
+            self.state.cur_health = 100
 
     def check_game_over(self):
-        if self.cur_health <= 0:
+        if self.state.cur_health <= 0:
             self.level.player.sprite.die()
 
     def check_menu(self, joystick):
@@ -114,8 +124,8 @@ class Game:
         if (keys[pygame.K_PERIOD] and keys[pygame.K_1]) and not self.input_wait:
             pygame.time.set_timer(self.menu_wait, 600)
             self.input_wait = True
-            self.max_level = 5
-            self.overworld = Overworld(self.screen_surface, self.create_level, 4, self.max_level)
+            self.state.max_level = 5
+            self.overworld = Overworld(self.screen_surface, self.create_level, 4, self.state.max_level)
 
     def run(self, joystick=None):
         self.check_menu(joystick)
@@ -123,6 +133,6 @@ class Game:
             self.overworld.run(joystick, self.controller)
         elif self.status == 'level':
             self.level.run(joystick, self.controller)
-            self.ui.show_health(self.cur_health, self.max_health)
-            self.ui.show_coins(self.coins)
+            self.ui.show_health(self.state.cur_health, self.state.max_health)
+            self.ui.show_coins(self.state.coins)
             self.check_game_over()

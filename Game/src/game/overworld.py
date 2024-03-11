@@ -41,11 +41,10 @@ class Icon(pygame.sprite.Sprite):
 
 
 class Overworld:
-    def __init__(self, surface, create_level, start_level=0, max_level=0):
+    def __init__(self, surface, create_level, state):
         # setup
         self.display_surface = surface
-        self.max_level = max_level
-        self.current_level = start_level
+        self.state = state
         self.create_level = create_level
         self.wait = True
 
@@ -66,7 +65,7 @@ class Overworld:
 
         for index, node_data in enumerate(levels.values()):
             pos = node_data['node_pos']
-            if index <= self.max_level:
+            if index <= self.state.max_level:
                 node_sprite = Node(200, pos[0], pos[1], 'available', self.speed, node_data['node_graphics'])
             else:
                 node_sprite = Node(200, pos[0], pos[1], 'locked', self.speed, node_data['node_graphics'])
@@ -74,11 +73,11 @@ class Overworld:
 
     def setup_icon(self):
         self.icon = pygame.sprite.GroupSingle()
-        icon_sprite = Icon(self.nodes.sprites()[self.current_level].rect.center)
+        icon_sprite = Icon(self.nodes.sprites()[self.state.current_level].rect.center)
         self.icon.add(icon_sprite)
 
     def draw_paths(self):
-        points = [node['node_pos'] for index, node in enumerate(levels.values()) if index <= self.max_level]
+        points = [node['node_pos'] for index, node in enumerate(levels.values()) if index <= self.state.max_level]
         if len(points) > 1:
             pygame.draw.lines(self.display_surface, '#a04f45', False, points, 6)
 
@@ -91,45 +90,45 @@ class Overworld:
     def controller_input(self, joystick):
         controller = controllers[joystick.get_name()]
         if joystick.get_name() in controllers.keys() and not self.moving and not self.wait:
-            if joystick.get_button(controller['right_pad']) and self.current_level < self.max_level:
+            if joystick.get_button(controller['right_pad']) and self.state.current_level < self.state.max_level:
                 self.move_direction = self.get_movement_data(True)
-                self.current_level += 1
+                self.state.current_level += 1
                 self.moving = True
-            elif joystick.get_button(controller['left_pad']) and self.current_level > 0:
+            elif joystick.get_button(controller['left_pad']) and self.state.current_level > 0:
                 self.move_direction = self.get_movement_data(False)
-                self.current_level -= 1
+                self.state.current_level -= 1
                 self.moving = True
             elif joystick.get_button(controller['cross']):
-                self.create_level(self.current_level)
+                self.create_level()
 
     def keyboard_input(self):
         keys = pygame.key.get_pressed()
 
         if not self.moving and not self.wait:
-            if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and self.current_level < self.max_level:
+            if (keys[pygame.K_RIGHT] or keys[pygame.K_d]) and self.state.current_level < self.state.max_level:
                 self.move_direction = self.get_movement_data(True)
-                self.current_level += 1
+                self.state.current_level += 1
                 self.moving = True
-            elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and self.current_level > 0:
+            elif (keys[pygame.K_LEFT] or keys[pygame.K_a]) and self.state.current_level > 0:
                 self.move_direction = self.get_movement_data(False)
-                self.current_level -= 1
+                self.state.current_level -= 1
                 self.moving = True
             elif keys[pygame.K_SPACE]:
-                self.create_level(self.current_level)
+                self.create_level()
 
     def get_movement_data(self, direction_forward=True):
         start = pygame.math.Vector2(self.icon.sprite.rect.center)
         if direction_forward:
-            end = pygame.math.Vector2(self.nodes.sprites()[self.current_level + 1].rect.center)
+            end = pygame.math.Vector2(self.nodes.sprites()[self.state.current_level + 1].rect.center)
         else:
-            end = pygame.math.Vector2(self.nodes.sprites()[self.current_level - 1].rect.center)
+            end = pygame.math.Vector2(self.nodes.sprites()[self.state.current_level - 1].rect.center)
 
         return (end - start).normalize()
 
     def update_icon_pos(self):
         if self.moving and self.move_direction:
             self.icon.sprite.pos += self.move_direction * self.speed
-            target_node = self.nodes.sprites()[self.current_level]
+            target_node = self.nodes.sprites()[self.state.current_level]
             self.icon.update()
             if target_node.detection_zone.collidepoint(self.icon.sprite.pos):
                 self.moving = False

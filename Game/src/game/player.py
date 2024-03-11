@@ -327,6 +327,4 @@ class Player(pygame.sprite.Sprite):
         self.get_status()
         if self.attack:
             self.attack.update()
-            self.attack.draw(self.display_surface)
         self.animate()
-        self.dust_animate()
