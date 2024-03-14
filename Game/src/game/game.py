@@ -1,5 +1,3 @@
-import pickle
-
 import pygame.time
 
 from data.settings import controllers, saveState
@@ -13,13 +11,7 @@ class Game:
     def __init__(self, surface):
         self.input_wait = False
         self.level = None
-
-        # trys to load save file and creates one if none exists
-        try:
-            with open('save.pkl', 'rb') as file:
-                self.state = pickle.load(file)
-        except FileNotFoundError:
-            self.state = saveState()
+        self.state = saveState()
 
         # misc
         self.screen_surface = surface
@@ -71,8 +63,7 @@ class Game:
             pygame.mixer.pause()
 
     def pickle_state(self):
-        with open('save.pkl', 'wb') as file:
-            pickle.dump(self.state, file)
+        pass
 
     def check_death(self):
         if self.state.cur_health <= 0:
