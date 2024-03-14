@@ -2,12 +2,13 @@ import pygame.sprite
 
 from data.settings import controllers
 from data.support import import_folder, import_loop, create_masks, find_files
-from levels.particles import AttackEffect
+from levels.particles import AttackEffect, SwordProjectile
 
 
+# TO DO: Fix can_move flag to be a dictionary lookup based on current status
 # noinspection PyAttributeOutsideInit
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, surface, create_jump_particles, mute, create_overworld):
+    def __init__(self, pos, surface, create_jump_particles, mute, create_overworld, swords, projectiles):
         super().__init__()
         self.animations = {}
         self.sword_effects = {}
@@ -31,7 +32,13 @@ class Player(pygame.sprite.Sprite):
         self.jump = False
 
         # player status
-        self.status = '09-Idle Sword'
+        self.status = 'Idle'
+        self.prev_status = 'Idle'
+        self.sword_dict = {'Idle': '09-Idle Sword', 'Run': '10-Run Sword', 'Jump': '11-Jump Sword',
+                           'Fall': '12-Fall Sword', 'Ground': '13-Ground Sword', 'Hit': '14-Hit Sword'}
+        self.nosword_dict = {'Idle': '01-Idle', 'Run': '02-Run', 'Jump': '03-Jump', 'Fall': '04-Fall',
+                             'Ground': '05-Ground', 'Hit': '06-Hit'}
+        # flags
         self.facing_right = True
         self.on_ground = True
         self.rebound = False
@@ -49,9 +56,7 @@ class Player(pygame.sprite.Sprite):
         # surfaces and masks
         self.display_surface = surface
         self.attack = pygame.sprite.GroupSingle()
-        self.mask_dict = {'09-Idle Sword': '01-Idle', '10-Run Sword': '02-Run', '11-Jump Sword': '03-Jump',
-                          '12-Fall Sword': '04-Fall', '13-Ground Sword': '05-Ground', '14-Hit Sword': '06-Hit'}
-        self.mask = self.mask_animations_right[self.mask_dict[self.status]][0]
+        self.mask = self.mask_animations_right[self.nosword_dict['Idle']][0]
         self.mask.clear()
 
         # audio
@@ -68,7 +73,10 @@ class Player(pygame.sprite.Sprite):
                             '16-Attack 2': ['25-Attack 2', False, 1200, pygame.Vector2(50, 0), -50],
                             '17-Attack 3': ['26-Attack 3', False, 1200, pygame.Vector2(50, -10), -50],
                             '18-Air Attack 1': ['27-Air Attack 1', True, None, pygame.Vector2(24, 48), -40],
-                            '19-Air Attack 2': ['28-Air Attack 2', True, None, pygame.Vector2(40, 30), -70]}
+                            '19-Air Attack 2': ['28-Air Attack 2', True, None, pygame.Vector2(40, 30), -70],
+                            '20-Throw Sword': ['', False, 1200, pygame.Vector2(32, -8), -100]}
+        self.swords = swords
+        self.projectiles = projectiles
 
     def import_character_assets(self):
         sword_effects_path = './graphics/character/Sword Effects/'
@@ -93,15 +101,17 @@ class Player(pygame.sprite.Sprite):
     def animate(self):
         self.set_animation_speed()
         self.frame_index += self.animations_speed
-        animation = self.animations[self.status]
+        key = self.get_animation_key()
+        animation = self.animations[key]
         if self.frame_index >= len(animation):
             self.frame_index = 0
             self.reset_status()
-            animation = self.animations[self.status]
+            key = self.get_animation_key()
+            animation = self.animations[key]
         index = int(self.frame_index)
         self.image = animation[index]
         try:
-            key = self.mask_dict[self.status]
+            key = self.nosword_dict[self.status]
         except KeyError:
             key = self.status
         if not self.facing_right:
@@ -110,11 +120,29 @@ class Player(pygame.sprite.Sprite):
         else:
             self.mask = self.mask_animations_right[key][index]
 
+    def get_animation_key(self):
+        if self.swords > 0:
+            try:
+                key = self.sword_dict[self.status]
+            except KeyError:
+                key = self.status
+        else:
+            try:
+                key = self.nosword_dict[self.status]
+            except KeyError:
+                key = self.status
+        return key
+
     def set_animation_speed(self):
-        if self.status == '10-Run Sword':
+        if self.status == 'Run':
             self.animations_speed = 0.15
         else:
             self.animations_speed = 0.10
+
+    def reset_frame_index(self):
+        if self.status != self.prev_status:
+            self.frame_index = 0
+        self.prev_status = self.status
 
     def reset_status(self):
         if self.status == '07-Dead Hit':
@@ -126,38 +154,38 @@ class Player(pygame.sprite.Sprite):
             self.dead_wait_counter += 1
             if self.dead_wait_counter > 10:
                 self.create_overworld()
-        elif self.should_reset_status():
+        elif self.is_status_sticky():
             self.knockback = False
             self.status = 'None'
             self.get_status()
 
-    def should_reset_status(self):
-        should_reset = ['14-Hit Sword', '15-Attack 1', '16-Attack 2', '17-Attack 3', '18-Air Attack 1',
-                        '19-Air Attack 2', '07-Dead Hit', '08-Dead Ground', 'DEAD-WAIT']
-        if self.status in should_reset:
+    def is_status_sticky(self):
+        should_reset = ['Hit', 'Ground', '15-Attack 1', '16-Attack 2', '17-Attack 3', '18-Air Attack 1',
+                        '19-Air Attack 2', '07-Dead Hit', '08-Dead Ground', 'DEAD-WAIT', '20-Throw Sword']
+        if self.status in ['18-Air Attack 1', '19-Air Attack 2'] and self.on_ground:
+            return False
+        elif self.status in should_reset:
             return True
         return False
 
     def get_status(self):
-        if not self.should_reset_status():
+        if not self.is_status_sticky():
             current = self.status
             if self.direction.y < 0:
-                self.status = '11-Jump Sword'
+                self.status = 'Jump'
             elif self.direction.y > 1:
-                self.status = '12-Fall Sword'
+                self.status = 'Fall'
+            elif self.direction.x == 0:
+                self.status = 'Idle'
             else:
-                if self.direction.x == 0:
-                    self.status = '09-Idle Sword'
-                else:
-                    self.status = '10-Run Sword'
+                self.status = 'Run'
             if self.status != current:
                 self.can_move = True
 
     def knockback_init(self, vector_push=None, rebound=False):
-        self.frame_index = 0
         self.can_move = self.jump = self.rebound = False
         self.knockback = True
-        self.status = '14-Hit Sword'
+        self.status = 'Hit'
         if rebound:
             self.rebound = True
         if vector_push:
@@ -171,8 +199,7 @@ class Player(pygame.sprite.Sprite):
             self.dead = True
 
     def dust_animate(self):
-        # rewrite so can be drawn in levels to allow for proper layering.
-        if self.status == '10-Run Sword' and self.on_ground:
+        if self.status == 'Run' and self.on_ground:
             self.dust_frame_index += self.dust_animations_speed
             if self.dust_frame_index >= len(self.dust_run_particles):
                 self.dust_frame_index = 0
@@ -205,7 +232,7 @@ class Player(pygame.sprite.Sprite):
                 self.direction.x -= 0.2
                 self.facing_right = False
             # jump
-            if (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.direction.y == 0:
+            if (keys[pygame.K_SPACE] or keys[pygame.K_w]) and self.on_ground:
                 self.jump = True
                 self.create_jump_particles(self.collide_rect.midbottom)
                 self.channel.play(self.jump_sound)
@@ -214,19 +241,22 @@ class Player(pygame.sprite.Sprite):
                     self.direction.y = -4
                     self.jump = False
             # attacks
-            if self.can_attack and self.on_ground:
-                if keys[pygame.K_q]:
-                    self.initiate_attack('15-Attack 1')
-                elif keys[pygame.K_e]:
-                    self.initiate_attack('16-Attack 2')
-                elif keys[pygame.K_r]:
-                    self.initiate_attack('17-Attack 3')
+            if self.swords > 0:
+                if self.can_attack and self.on_ground:
+                    if keys[pygame.K_q]:
+                        self.initiate_attack('15-Attack 1')
+                    elif keys[pygame.K_e]:
+                        self.initiate_attack('16-Attack 2')
+                    elif keys[pygame.K_r]:
+                        self.initiate_attack('17-Attack 3')
+                    elif keys[pygame.K_g]:
+                        self.initiate_attack('20-Throw Sword')
 
-            elif self.can_air_attack and not self.on_ground:
-                if keys[pygame.K_q]:
-                    self.initiate_attack('18-Air Attack 1', True)
-                elif keys[pygame.K_e]:
-                    self.initiate_attack('19-Air Attack 2', True)
+                elif self.can_air_attack and not self.on_ground:
+                    if keys[pygame.K_q]:
+                        self.initiate_attack('18-Air Attack 1', True)
+                    elif keys[pygame.K_e]:
+                        self.initiate_attack('19-Air Attack 2', True)
 
     def joystick_input(self, joystick):
         controller = controllers[joystick.get_name()]
@@ -240,7 +270,7 @@ class Player(pygame.sprite.Sprite):
                 self.facing_right = False
             # jump
             if ((joystick.get_button(controller['cross']) or joystick.get_button(controller['up_pad'])) and
-                    self.direction.y == 0):
+                    self.on_ground):
                 self.jump = True
                 self.create_jump_particles(self.collide_rect.midbottom)
                 self.channel.play(self.jump_sound)
@@ -249,36 +279,43 @@ class Player(pygame.sprite.Sprite):
                     self.direction.y = -4
                     self.jump = False
             # attacks
-            if self.can_attack and self.on_ground:
-                if joystick.get_button(controller['square']):
-                    self.initiate_attack('15-Attack 1')
-                elif joystick.get_button(controller['triangle']):
-                    self.initiate_attack('16-Attack 2')
-                elif joystick.get_button(controller['circle']):
-                    self.initiate_attack('17-Attack 3')
+            if self.swords > 0:
+                if self.can_attack and self.on_ground:
+                    if joystick.get_button(controller['square']):
+                        self.initiate_attack('15-Attack 1')
+                    elif joystick.get_button(controller['triangle']):
+                        self.initiate_attack('16-Attack 2')
+                    elif joystick.get_button(controller['circle']):
+                        self.initiate_attack('17-Attack 3')
+                    elif joystick.get_button(controller['R1']):
+                        self.initiate_attack('20-Throw Sword')
 
-            elif self.can_air_attack and not self.on_ground:
-                if joystick.get_button(controller['square']):
-                    self.initiate_attack('18-Air Attack 1', True)
-                elif joystick.get_button(controller['triangle']):
-                    self.initiate_attack('19-Air Attack 2', True)
+                elif self.can_air_attack and not self.on_ground:
+                    if joystick.get_button(controller['square']):
+                        self.initiate_attack('18-Air Attack 1', True)
+                    elif joystick.get_button(controller['triangle']):
+                        self.initiate_attack('19-Air Attack 2', True)
 
     def initiate_attack(self, status, air=False):
         self.status = status
         attack = self.attack_data[status]
         self.can_move = attack[1]
-        self.frame_index = 0
         if not air:
             self.can_attack = False
             pygame.time.set_timer(self.attack_timer, attack[2])
         else:
             self.can_air_attack = False
 
-        self.attack.add(AttackEffect(self, self.sword_effects[attack[0]], should_flip=not self.facing_right,
-                                     facing=self.facing_right,
-                                     right_mask=self.mask_sword_effects_right[attack[0]],
-                                     left_mask=self.mask_sword_effects_left[attack[0]],
-                                     offset=attack[3], type=attack[0], damage=attack[4]))
+        if status != '20-Throw Sword':
+            self.attack.add(AttackEffect(self, self.sword_effects[attack[0]], should_flip=not self.facing_right,
+                                         facing=self.facing_right,
+                                         right_mask=self.mask_sword_effects_right[attack[0]],
+                                         left_mask=self.mask_sword_effects_left[attack[0]],
+                                         offset=attack[3], type=attack[0], damage=attack[4]))
+        else:
+            self.swords -= 1
+            self.projectiles.add(SwordProjectile(self.rect, facing=self.facing_right, offset=attack[3],
+                                                 damage=attack[4]))
 
     def apply_gravity(self):
         if self.jump:
@@ -327,4 +364,5 @@ class Player(pygame.sprite.Sprite):
         self.get_status()
         if self.attack:
             self.attack.update()
+        self.reset_frame_index()
         self.animate()

@@ -48,7 +48,7 @@ class Game:
 
     def create_level(self):
         self.level = Level(self.state.current_level, self.screen_surface, self.create_overworld,
-                           self.change_coins, self.change_cur_health, self.mute_flag)
+                           self.change_coins, self.change_cur_health, self.state, self.mute_flag)
         self.pickle_state()
         self.status = 'level'
         self.music.play(self.level_music, loops=-1)
@@ -82,7 +82,7 @@ class Game:
             # self.current_level = 0 // uncomment for perma death
 
     def change_coins(self, amount):
-        self.state.coins += amount
+        self.state.coins += abs(amount)
 
     def change_cur_health(self, amount):
         self.state.cur_health += amount
@@ -125,7 +125,7 @@ class Game:
             pygame.time.set_timer(self.menu_wait, 600)
             self.input_wait = True
             self.state.max_level = 5
-            self.overworld = Overworld(self.screen_surface, self.create_level, 4, self.state.max_level)
+            self.overworld = Overworld(self.screen_surface, self.create_level, self.state)
 
     def run(self, joystick=None):
         self.check_menu(joystick)
@@ -135,4 +135,5 @@ class Game:
             self.level.run(joystick, self.controller)
             self.ui.show_health(self.state.cur_health, self.state.max_health)
             self.ui.show_coins(self.state.coins)
+            self.ui.show_swords(self.level.player.sprite.swords)
             self.check_game_over()

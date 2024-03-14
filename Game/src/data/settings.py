@@ -15,12 +15,14 @@ controllers = {'PS5 Controller': {'left_pad': 13, 'right_pad': 14, 'up_pad': 11,
 
 
 class saveState:
-    def __init__(self, current_level=0, max_level=0, max_health=100, cur_health=100, coins=0):
+    def __init__(self, current_level=0, max_level=0, max_health=100, cur_health=100, coins=0, swords=0):
         self.current_level = current_level
         self.max_level = max_level
         self.max_health = max_health
         self.cur_health = cur_health
         self.coins = coins
+        self.swords = swords
 
     def __reduce__(self):
-        return self.__class__, (self.current_level, self.max_level, self.max_health, self.cur_health, self.coins)
+        return self.__class__, (self.current_level, self.max_level, self.max_health, self.cur_health, self.coins,
+                                self.swords)

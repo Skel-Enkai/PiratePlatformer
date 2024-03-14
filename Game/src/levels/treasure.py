@@ -1,5 +1,6 @@
 import pygame.sprite
 
+from data.enums import Treasure
 from data.support import create_masks_list, import_folder
 from levels.tiles import AnimatedTile
 
@@ -43,7 +44,7 @@ class Coin(AnimatedTreasureTile):
 	def __init__(self, size, x, y, path, value):
 		super().__init__(size, x, y, path, './graphics/treasure/coin_effect', anim_speed=0.10)
 		self.value = value
-		self.name = 'Coin'
+		self.type = Treasure.Coin
 
 
 class RedPotion(AnimatedTreasureTile):
@@ -51,7 +52,15 @@ class RedPotion(AnimatedTreasureTile):
 		super().__init__(size, x, y, './graphics/treasure/red_potion',
 		                 './graphics/treasure/potion_effect')
 		self.change_cur_health = change_health
-		self.name = 'Potion'
+		self.type = Treasure.Potion
 
 	def consume(self):
 		self.change_cur_health(50)
+
+
+class Sword(AnimatedTreasureTile):
+	def __init__(self, size, x, y):
+		super().__init__(size, x, y, './graphics/character/Sword/21-Sword Idle',
+		                 './graphics/treasure/potion_effect', scale=2)
+		self.type = Treasure.Sword
+

@@ -1,5 +1,6 @@
 import pygame.sprite
 
+from data.enums import Projectile
 from data.game_data import *
 from data.support import import_csv_layout, import_cut_graphic, find_vector_from_two_points
 from game.player import Player
@@ -13,7 +14,8 @@ from levels.treasure import *
 
 # noinspection PyAttributeOutsideInit,PyTypeChecker,PyUnboundLocalVariable
 class Level:
-    def __init__(self, level_number, surface, create_overworld, change_coins, change_cur_health, mute):
+    def __init__(self, level_number, surface, create_overworld, change_coins, change_cur_health, state, mute):
+        self.state = state
         # attributes
         self.create_overworld = create_overworld
         self.level_number = level_number
@@ -30,21 +32,9 @@ class Level:
         self.coin_sound = pygame.mixer.Sound(find_files('./audio/effects/coin.wav'))
         self.stomp_sound = pygame.mixer.Sound(find_files('./audio/effects/stomp.wav'))
 
-        # player
-        player_layout = import_csv_layout(level_data['player'])
-        self.player = pygame.sprite.GroupSingle()
-        self.goal = pygame.sprite.GroupSingle()
-        self.player_setup(player_layout, mute, create_overworld)
-        self.player_speed = self.player.sprite.speed.copy()
-        self.player_current_x = 0
-
         # user interface
         self.change_coins = change_coins
         self.change_cur_health = change_cur_health
-
-        # "camera"
-        self.world_shift = pygame.Vector2(0, 0)
-        self.world_offset = pygame.Vector2(0, 0)
 
         # dust
         self.particle_effects = pygame.sprite.Group()
@@ -57,6 +47,22 @@ class Level:
                               'bg palms': pygame.sprite.Group(), 'enemies': pygame.sprite.Group(),
                               'constraints': pygame.sprite.Group(), 'traps': pygame.sprite.Group()}
 
+        # "camera"
+        self.world_shift = pygame.Vector2(0, 0)
+        self.world_offset = pygame.Vector2(0, 0)
+
+        # player
+        player_layout = import_csv_layout(level_data['player'])
+        self.player = pygame.sprite.GroupSingle()
+        self.goal = pygame.sprite.GroupSingle()
+        self.player_setup(player_layout, mute, create_overworld)
+        self.player_speed = self.player.sprite.speed.copy()
+        self.player_current_x = 0
+
+        # world size
+        self.world_size = (tile_size * len(player_layout), tile_size * len(player_layout[0]))
+
+        # leveldata
         for key in level_data.keys():
             if key not in ('node_pos', 'unlock', 'node_graphics', 'player'):
                 layout = import_csv_layout(level_data[key])
@@ -68,7 +74,7 @@ class Level:
 
         # decoration
         self.sky = Sky(7)
-        self.water = Water(screen_height - 40, self.world_length, 0.06)
+        self.water = Water(self.world_size[0] - tile_size + 10 + self.initial_offset.y, self.world_length, 0.06)
         self.cloud = Clouds(7, self.world_length, randint(2, 14))
 
         # traps
@@ -116,6 +122,8 @@ class Level:
                                 sprite = Coin(tile_size, x, y, './graphics/treasure/silver_coin', 1)
                             elif val == '2':
                                 sprite = RedPotion(tile_size, x, y, self.change_cur_health)
+                            elif val == '3':
+                                sprite = Sword(tile_size, x, y + 10)
 
                         case 'fg palms':
                             if val == '0':
@@ -156,7 +164,7 @@ class Level:
                 x = tile_size * col_index
                 if val == '0':
                     sprite = Player((x, y), self.display_surface, self.create_jump_particles, mute,
-                                    create_overworld)
+                                    create_overworld, self.state.swords, self.projectiles)
                     self.set_initial_world_offset(x, y)
                     sprite.collide_rect.center += self.initial_offset
                     sprite.collide_rect.centerx -= 32
@@ -170,7 +178,7 @@ class Level:
 
     def set_initial_world_offset(self, x, y):
         start_pos = (x, y)
-        end_pos = (200, 400)
+        end_pos = (200, screen_height - 3 * tile_size)
         x = (end_pos[0] - start_pos[0])
         y = (end_pos[1] - start_pos[1])
         direction = pygame.Vector2(x, y)
@@ -220,16 +228,16 @@ class Level:
     def scroll_y(self):
         player = self.player.sprite
         player_y = player.collide_rect.centery
-
         direction_y = player.direction.y
         speed = round(player.direction.y * self.player_speed.y)
 
-        if player_y < (screen_height // 3) and direction_y < 0 <= self.world_offset.y:
+        if player_y < (screen_height // 3) and direction_y < 0:
             player.speed.y = 0
             self.world_shift.y = -speed
             self.world_offset.y -= speed
 
-        elif player_y > (screen_height // (3 / 2)) and direction_y > 0 and self.world_offset.y > 0:
+        elif (player_y > (screen_height // (3 / 2)) and direction_y > 0
+              and -self.world_offset.y + screen_height + speed < self.world_size[0]):
             self.world_shift.y = -speed
             self.world_offset.y -= speed
             player.speed.y = 0
@@ -287,8 +295,10 @@ class Level:
 
     @staticmethod
     def downwards_collision(player, hitbox):
-        if player.direction.y > 5:
+        if player.direction.y > 7 and player.status == 'Fall':
             player.ground_impact = True
+            player.status = 'Ground'
+            player.can_move = False
         player.collide_rect.bottom = hitbox.top
         player.direction.y = 0
         player.on_ground = True
@@ -333,6 +343,10 @@ class Level:
 
     def check_win(self):
         if self.goal.sprite.rect.colliderect(self.player.sprite.collide_rect):
+            if self.player.sprite.swords < 5:
+                self.state.swords = self.player.sprite.swords
+            else:
+                self.state.swords = 5
             self.create_overworld(self.new_max_level)
 
     def check_treasure_collide(self):
@@ -342,12 +356,15 @@ class Level:
         if collided_treasure:
             for treasure in collided_treasure:
                 treasure.collect()
-                if treasure.name == 'Coin':
+                if treasure.type == Treasure.Coin:
                     self.effects_channel.play(self.coin_sound)
                     self.change_coins(treasure.value)
-                elif treasure.name == 'Potion':
+                elif treasure.type == Treasure.Potion:
                     self.effects_channel.play(self.coin_sound)
                     treasure.consume()
+                elif treasure.type == Treasure.Sword:
+                    self.effects_channel.play(self.coin_sound)
+                    player.swords += 1
 
     def player_enemy_collision(self, player, enemy, joystick):
         if not player.knockback:
@@ -393,18 +410,38 @@ class Level:
                 self.check_player_attack_hits(player, enemy)
 
     def check_projectile_collisions(self):
-        collided = pygame.sprite.spritecollide(self.player.sprite, self.projectiles, False,
-                                               collided=pygame.sprite.collide_mask)
-        if collided:
-            for projectile in collided:
+        collided_player = pygame.sprite.spritecollide(self.player.sprite, self.projectiles, False,
+                                                      collided=pygame.sprite.collide_mask)
+        for projectile in collided_player:
+            if projectile.type == Projectile.CannonBall:
                 if not projectile.exploded:
-                    # this is just for cannonballs for now
                     self.change_cur_health(-80)
                     vector = find_vector_from_two_points(projectile.rect.center, self.player.sprite.rect.center,
                                                          5)
                     self.player.sprite.direction = pygame.Vector2(0, 0)
                     self.player.sprite.knockback_init(vector, rebound=True)
                     projectile.explode()
+
+        collided_enemy = pygame.sprite.groupcollide(self.level_sprites['enemies'], self.projectiles, False,
+                                                    False, collided=pygame.sprite.collide_mask)
+        for enemy in collided_enemy.keys():
+            for projectile in collided_enemy[enemy]:
+                if projectile.type == Projectile.Sword:
+                    enemy.damage(projectile.damage)
+                elif projectile.type == Projectile.CannonBall:
+                    if not projectile.exploded:
+                        enemy.damage(-80)
+                        # vector = find_vector_from_two_points(projectile.rect.center, enemy.rect.center, 5)
+                        # self.player.sprite.direction = pygame.Vector2(0, 0)
+                        # self.player.sprite.knockback_init(vector, rebound=True)
+                        projectile.explode()
+
+        collided_traps = pygame.sprite.groupcollide(self.level_sprites['traps'], self.projectiles, False,
+                                                    False, collided=pygame.sprite.collide_mask)
+        for enemy in collided_traps.keys():
+            for projectile in collided_traps[enemy]:
+                if projectile.type == Projectile.Sword:
+                    enemy.damage(projectile.damage)
 
     def draw(self):
         self.sky.draw(self.display_surface)

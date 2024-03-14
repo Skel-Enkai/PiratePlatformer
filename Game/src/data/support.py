@@ -72,6 +72,16 @@ def import_character_assets(path, animations_dict, masks_left, masks_right):
     create_masks(animations_dict, masks_right, masks_left)
 
 
+def import_assets_lists(path, animations_right, animations_left, masks_right, masks_left, scale=1):
+    for frame in import_folder(path):
+        frame = pygame.transform.scale_by(frame, scale)
+        animations_right.append(frame)
+    for frame in animations_right:
+        animations_left.append(pygame.transform.flip(frame, True, False))
+    create_masks_list(animations_right, masks_right)
+    create_masks_list(animations_left, masks_left)
+
+
 def flipx_dictionary(dictionary):
     for key in dictionary.keys():
         for index, frame in enumerate(dictionary[key]):
