@@ -1,17 +1,21 @@
+import pygame
 import pygame.sprite
 
+from data.enums import Enemies
 from data.support import import_character_assets
-from levels.particles import AttackEffect
+from levels.particles import AttackEffect, AnchoredEffect
 
 
 # noinspection PyAttributeOutsideInit
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, x, y, path, display_surface, player, identifier=None, health=100):
+    def __init__(self, x, y, path, display_surface, player, identifier=None, health=100, collide_damage=-20):
         super().__init__()
         # attributes
         self.speed = 1
         self.true_speed = 1
         self.health = health
+        self.collide_damage = collide_damage
+
         self.frame_index = 0
         self.direction = pygame.Vector2(0, 0)
 
@@ -93,7 +97,7 @@ class Enemy(pygame.sprite.Sprite):
     def move(self, world_shift):
         self.rect.x += int(self.direction.x * self.speed)
         self.rect.center += world_shift
-        self.collide_rect.center = self.rect.center
+        self.collide_rect.midbottom = self.rect.midbottom
 
     def damage(self, amount):
         if not self.knockback and not self.dying:
@@ -157,6 +161,7 @@ class Enemy(pygame.sprite.Sprite):
 class FierceTooth(Enemy):
     def __init__(self, x, y, display_surface, player, identifier):
         super().__init__(x, y, './graphics/enemies/fierce_tooth/', display_surface, player, identifier=identifier)
+        self.type = Enemies.FierceTooth
         self.rect.center += pygame.Vector2(10, 10)
         self.collide_rect = pygame.Rect(x, y, 34, 42)
         self.collide_rect.bottom = self.rect.bottom
@@ -181,18 +186,20 @@ class FierceTooth(Enemy):
     def anticipate_attack(self):
         if not self.knockback and not self.dying:
             self.speed = 0
+            self.frame_index = 0
             self.status = '06-Anticipation'
             self.attack_effect.add(AttackEffect(self, self.animations['11-Attack Effect'],
                                                 should_flip=self.facing_right, facing=self.facing_right,
                                                 right_mask=self.masks_right['11-Attack Effect'],
                                                 left_mask=self.masks_left['11-Attack Effect'],
-                                                offset=pygame.Vector2(60, -12), damage=-30))
+                                                offset=pygame.Vector2(54, -18), damage=-30))
 
 
 class Crabby(Enemy):
     def __init__(self, x, y, display_surface, player, identifier):
-        super().__init__(x, y, './graphics/enemies/Crabby/', display_surface, player, health=120,
-                         identifier=identifier)
+        super().__init__(x, y, './graphics/enemies/Crabby/', display_surface, player, health=140,
+                         identifier=identifier, collide_damage=-40)
+        self.type = Enemies.Crabby
         self.rect.center += pygame.Vector2(8, 8)
         self.collide_rect = pygame.Rect(x, y, 34, 42)
         self.collide_rect.bottom = self.rect.bottom
@@ -217,9 +224,98 @@ class Crabby(Enemy):
     def anticipate_attack(self):
         if not self.knockback and not self.dying:
             self.speed = 0
+            self.frame_index = 0
             self.status = '06-Anticipation'
             self.attack_effect.add(AttackEffect(self, self.animations['11-Attack Effect'],
                                                 should_flip=self.facing_right, facing=self.facing_right,
                                                 right_mask=self.masks_right['11-Attack Effect'],
                                                 left_mask=self.masks_left['11-Attack Effect'],
-                                                offset=pygame.Vector2(0, 0), damage=-50))
+                                                offset=pygame.Vector2(0, 0), damage=-60))
+
+
+class PinkStar(Enemy):
+    def __init__(self, x, y, display_surface, player, identifier):
+        super().__init__(x, y, './graphics/enemies/PinkStar/', display_surface, player, health=120,
+                         identifier=identifier)
+        self.type = Enemies.PinkStar
+        self.rect.center += pygame.Vector2(8, 8)
+        self.collide_rect = pygame.Rect(x, y, 32, 36)
+        self.collide_rect.bottom = self.rect.bottom
+        self.effect = pygame.sprite.GroupSingle()
+        self.effect.add(AnchoredEffect(self, self.animations['11-Attack Effect'], permanent=True,
+                                       offset=pygame.Vector2(40, 14)))
+
+    def decision(self):
+        if self.speed > 0 and self.status != '07-Attack':
+            rect_xdifference = self.rect.centerx - self.player.sprite.rect.centerx
+            rect_ydifference = self.rect.centery - self.player.sprite.rect.centery
+            if abs(rect_ydifference) <= 60 and self.player.sprite.status != 'DEAD-WAIT':
+                if abs(rect_xdifference) >= 300:
+                    self.direction.x = 0
+                elif (abs(rect_xdifference) >= 30 and ((self.facing_right and rect_xdifference < 0) or
+                                                       (not self.facing_right and rect_xdifference > 0))):
+                    self.anticipate_attack()
+
+                if rect_xdifference < 0:
+                    self.direction.x = 1
+                else:
+                    self.direction.x = -1
+            else:
+                self.direction.x = 0
+
+    def anticipate_attack(self):
+        if not self.knockback and not self.dying:
+            self.speed = 0
+            self.frame_index = 0
+            self.status = '06-Anticipation'
+
+    def boundary_detection(self):
+        if self.constraints is not []:
+            for constraint in self.constraints:
+                if self.collide_rect.centerx <= constraint.rect.centerx:
+                    if self.direction.x > 0:
+                        self.direction.x = 0
+
+                else:
+                    if self.direction.x < 0:
+                        self.direction.x = 0
+                self.reset_status()
+
+    def animate(self):
+        self.set_animation_speed()
+        self.frame_index += self.anim_speed
+        if self.frame_index > len(self.animations[self.status]):
+            self.frame_index = 0
+            if self.knockback:
+                self.reset_status()
+            elif self.status == '09-Dead Hit':
+                self.status = '10-Dead Ground'
+            elif self.status == '10-Dead Ground':
+                self.kill()
+            elif self.status == '06-Anticipation':
+                self.status = '07-Attack'
+            elif self.status == '07-Attack':
+                pass
+        index = int(self.frame_index)
+        self.image = self.animations[self.status][index]
+        if self.facing_right:
+            self.image = pygame.transform.flip(self.image, True, False)
+            self.mask = self.masks_right[self.status][index]
+        else:
+            self.mask = self.masks_left[self.status][index]
+
+    def update(self, world_shift):
+        self.decision()
+        self.boundary_detection()
+        self.get_status()
+        self.move(world_shift)
+
+        self.check_facing()
+        self.animate()
+        if self.status == '07-Attack':
+            self.speed = 5
+            self.collide_damage = -50
+            self.effect.update()
+            self.effect.draw(self.display_surface)
+        else:
+            self.collide_damage = -30

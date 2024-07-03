@@ -5,10 +5,11 @@ from data.support import import_folder, import_assets_lists
 
 
 class Effect(pygame.sprite.Sprite):
-    def __init__(self, pos, frames_object, animation_speed=0.4, player_effect=False):
+    def __init__(self, pos, frames_object, animation_speed=0.4, player_effect=False, permanent=False):
         super().__init__()
         self.frame_index = 0
         self.animation_speed = animation_speed
+        self.permanent = permanent
         if isinstance(frames_object, str):
             self.frames = import_folder(frames_object)
         else:
@@ -26,9 +27,63 @@ class Effect(pygame.sprite.Sprite):
         else:
             self.image = self.frames[int(self.frame_index)]
 
+    def permanent_animate(self):
+        self.frame_index += self.animation_speed
+        if self.frame_index >= len(self.frames):
+            self.frame_index = 0
+        self.image = self.frames[int(self.frame_index)]
+
     def update(self, world_shift):
-        self.animate()
+        if self.permanent:
+            self.permanent_animate()
+        else:
+            self.animate()
         self.rect.center += world_shift
+
+
+class AnchoredEffect(pygame.sprite.Sprite):
+    def __init__(self, parent, frames_object, animation_speed=0.4, permanent=False, offset=pygame.Vector2(0, 0)):
+        super().__init__()
+        self.parent = parent
+        self.frame_index = 0
+        self.animation_speed = animation_speed
+        self.permanent = permanent
+        self.offset = offset
+        if isinstance(frames_object, str):
+            self.frames = import_folder(frames_object)
+        else:
+            self.frames = frames_object
+        self.image = self.frames[self.frame_index]
+        self.rect = self.image.get_rect(midbottom=parent.rect.midbottom)
+
+    def animate(self):
+        self.frame_index += self.animation_speed
+        if self.frame_index >= len(self.frames):
+            self.kill()
+        else:
+            self.image = self.frames[int(self.frame_index)]
+            if self.parent.facing_right:
+                self.image = pygame.transform.flip(self.image, True, False)
+
+    def permanent_animate(self):
+        self.frame_index += self.animation_speed
+        if self.frame_index >= len(self.frames):
+            self.frame_index = 0
+        self.image = self.frames[int(self.frame_index)]
+        if self.parent.facing_right:
+            self.image = pygame.transform.flip(self.image, True, False)
+
+    def update(self):
+        if self.permanent:
+            self.permanent_animate()
+        else:
+            self.animate()
+        self.rect.center = self.parent.rect.center
+        self.rect.y += self.offset.y
+        if self.parent.facing_right:
+            self.rect.x -= self.offset.x
+        else:
+            self.rect.x += self.offset.x
 
 
 class AttackEffect(pygame.sprite.Sprite):

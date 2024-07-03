@@ -5,7 +5,7 @@ from data.game_data import *
 from data.support import import_csv_layout, import_cut_graphic, find_vector_from_two_points
 from game.player import Player
 from levels.decoration import *
-from levels.enemy import FierceTooth, Crabby
+from levels.enemy import FierceTooth, Crabby, PinkStar
 from levels.particles import Effect
 from levels.tiles import *
 from levels.traps import Cannon
@@ -139,6 +139,8 @@ class Level:
                                 sprite = FierceTooth(x, y, self.display_surface, self.player, identifier)
                             elif val == '1':
                                 sprite = Crabby(x, y, self.display_surface, self.player, identifier)
+                            elif val == '5':
+                                sprite = PinkStar(x, y, self.display_surface, self.player, identifier)
                             identifier += 1
 
                         case 'constraints':
@@ -319,6 +321,7 @@ class Level:
             player.on_ground = False
 
     def enemy_collision_boundary(self):
+        # add raycasting for enemies to slow down when approaching boundary.
         enemy_sprites = self.level_sprites['enemies']
         constraint_sprites = self.level_sprites['constraints']
         for enemy in enemy_sprites:
@@ -368,7 +371,7 @@ class Level:
 
     def player_enemy_collision(self, player, enemy, joystick):
         if not player.knockback:
-            self.change_cur_health(-25)
+            self.change_cur_health(enemy.collide_damage)
             player.knockback_init()
             if player.direction.y < -2 and (enemy.rect.top <= player.collide_rect.top):
                 player.head_collision()
