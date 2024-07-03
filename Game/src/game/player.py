@@ -1,3 +1,5 @@
+import sys
+
 import pygame.sprite
 
 from data.settings import controllers
@@ -65,8 +67,12 @@ class Player(pygame.sprite.Sprite):
             self.channel.set_volume(0.0)
         else:
             self.channel.set_volume(0.2)
-        self.jump_sound = pygame.mixer.Sound(find_files('./audio/effects/jump.wav'))
-        self.hit_sound = pygame.mixer.Sound(find_files('./audio/effects/hit.wav'))
+        if sys.platform == "emscripten":
+            self.jump_sound = pygame.mixer.Sound(find_files('./audio/effects/jump.ogg'))
+            self.hit_sound = pygame.mixer.Sound(find_files('./audio/effects/hit.ogg'))
+        else:
+            self.jump_sound = pygame.mixer.Sound(find_files('./audio/effects/jump.wav'))
+            self.hit_sound = pygame.mixer.Sound(find_files('./audio/effects/hit.wav'))
 
         # attack data
         self.attack_data = {'15-Attack 1': ['24-Attack 1', False, 1200, pygame.Vector2(72, 2), -40],

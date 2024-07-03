@@ -1,8 +1,10 @@
+import sys
+
 import pygame.sprite
 
 from data.enums import Projectile
 from data.game_data import *
-from data.support import import_csv_layout, import_cut_graphic, find_vector_from_two_points
+from data.support import import_csv_layout, import_cut_graphic, find_vector_from_two_points, find_files
 from game.player import Player
 from levels.decoration import *
 from levels.enemy import FierceTooth, Crabby, PinkStar
@@ -29,8 +31,13 @@ class Level:
             self.effects_channel.set_volume(0.0)
         else:
             self.effects_channel.set_volume(0.2)
-        self.coin_sound = pygame.mixer.Sound(find_files('./audio/effects/coin.wav'))
-        self.stomp_sound = pygame.mixer.Sound(find_files('./audio/effects/stomp.wav'))
+
+        if sys.platform == "emscripten":
+            self.coin_sound = pygame.mixer.Sound(find_files('./audio/effects/coin.ogg'))
+            self.stomp_sound = pygame.mixer.Sound(find_files('./audio/effects/stomp.ogg'))
+        else:
+            self.coin_sound = pygame.mixer.Sound(find_files('./audio/effects/coin.wav'))
+            self.stomp_sound = pygame.mixer.Sound(find_files('./audio/effects/stomp.wav'))
 
         # user interface
         self.change_coins = change_coins

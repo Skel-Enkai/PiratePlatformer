@@ -28,7 +28,6 @@ game = Game(screen_surface)
 pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.JOYDEVICEADDED, pygame.JOYDEVICEREMOVED,
                           pygame.JOYBUTTONDOWN])
 
-
 async def main():
     # debug
     # counter_1 = 0
